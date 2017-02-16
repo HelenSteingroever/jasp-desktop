@@ -1066,6 +1066,7 @@ void MainWindow::dataSetIOCompleted(FileEvent *event)
 			updateMenuEnabledDisabledStatus();
 			ui->webViewResults->reload();
 			setWindowTitle("JASP");
+			ui->tableView->adjustAfterDataLoad(false);
 
 			if (_applicationExiting)
 				QApplication::exit();
@@ -1091,8 +1092,7 @@ void MainWindow::populateUIfromDataSet()
 
 	_analyses->clear();
 
-	ui->tableView->horizontalHeader()->setResizeContentsPrecision(50);
-	ui->tableView->horizontalHeader()->resizeSections(QHeaderView::ResizeToContents);
+	ui->tableView->adjustAfterDataLoad(true);
 
 	_progressIndicator->hide();
 
