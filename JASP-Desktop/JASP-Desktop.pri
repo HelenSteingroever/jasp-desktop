@@ -398,7 +398,6 @@ HEADERS  += \
 		$$PWD/importers/ods/odssheetcell.h \
 		$$PWD/importers/ods/odstypes.h \
 		$$PWD/importers/ods/odsxmlcontentshandler.h \
-		$$PWD/importers/ods/odsxmlcontentshandler.h.orig \
 		$$PWD/importers/ods/odsxmlhandler.h \
 		$$PWD/importers/ods/odsxmlmanifesthandler.h
 
