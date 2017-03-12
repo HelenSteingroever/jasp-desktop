@@ -74,14 +74,14 @@ MLRegressionRandomForest <- function (dataset = NULL, options, perform = "run",
 
 	## Initialize Results ## ----
 
-	results <- list()
-	meta <- list(
-		list(name="title", type="title"),
-		list(name="tableVariableImportance", type="table"),
-		list(name="plotPredictivePerformance", type="image")
+	results <- list(
+		title = "Random Forest Regression",
+		.meta = list(
+			list(name = "title",                     type = "title"),
+			list(name = "tableVariableImportance",   type = "table"),
+			list(name = "plotPredictivePerformance", type = "image")
+		)
 	)
-	results[[".meta"]] <- meta
-	results[["title"]] <- "Random Forest Regression"
 
 	## Do Analysis ## ----
 	errorList <- NULL
@@ -116,10 +116,10 @@ MLRegressionRandomForest <- function (dataset = NULL, options, perform = "run",
 	if (doUpdate) {
 
 		if (options[["tableVariableImportance"]])
-			results[["tableVariableImportance"]] <- .MLRFVarImpTb(toFromState, variables)
+			results[["tableVariableImportance"]] <- .MLRFVarImpTb(toFromState, variables, perform = perform)
 
 		if (options[["plotPredictivePerformance"]])
-			results[["plotPredictivePerformance"]] <- .MLRFplotPredictivePerformance(toFromState, variables)
+			results[["plotPredictivePerformance"]] <- .MLRFplotPredictivePerformance(toFromState, variables, perform = perform)
 
 	}
 
@@ -137,8 +137,6 @@ MLRegressionRandomForest <- function (dataset = NULL, options, perform = "run",
 		return(list(results=results, status="complete"))#, state=state))
 
 	}
-
-
 }
 
 .pprint <- function(x) {
@@ -233,14 +231,14 @@ MLRegressionRandomForest <- function (dataset = NULL, options, perform = "run",
 
 }
 
-.MLRFVarImpTb <- function(toFromState, variables) {
+.MLRFVarImpTb <- function(toFromState, variables, perform) {
 
 	table <- list(title = "Variable Importance")
 
 	intNms = c("MDiA", "MDiNI") # internal names
 	extNms = c("Mean decrease in accuracy", "Mean decrease in node impurity") # external names
 
-	if (is.null(toFromState) || is.null(variables)) { # no/ bad input
+	if (any(perform != "run", is.null(toFromState), is.null(variables))) { # no/ bad input
 
 		toTable <- matrix(".", nrow = 1, ncol = 2,
 						  dimnames = list(".", intNms))
@@ -306,8 +304,7 @@ MLRegressionRandomForest <- function (dataset = NULL, options, perform = "run",
 
 }
 
-# function for plotting, perhaps there is something we can borrow from common?
-.plotMultipleLines = function(x, y, options, debug, ...) {
+.plotMultipleLines = function(x, y, options, Rdebug, ...) {
 
 	args <- list(x = x, y = y, ...)
 
@@ -328,40 +325,36 @@ MLRegressionRandomForest <- function (dataset = NULL, options, perform = "run",
 		font.lab = 2)
 
 	# make plot
-	if (!debug)
-		.beginSaveImage(width = 360, 240)
+	content = ""
+	if (!Sys.getenv("RSTUDIO") == "1")
+		image <- .beginSaveImage(width = 360, height = 240)
 
 	if (NCOL(args[["y"]]) == 1) { 	# default plot
 		do.call(graphics::plot, args)
 	} else { 						# matplot
 		do.call(graphics::matplot, args)
 	}
-	if (!debug) {
-
+	
+	if (!Sys.getenv("RSTUDIO") == "1") {
 		content <- .endSaveImage(image)
-
-	} else {
-
-		content <- ""
-
-	}
-
+	} 
+		
 	return(content)
 }
 
-.MLRFplotPredictivePerformance = function(toFromState, options, debug = FALSE) {
+.MLRFplotPredictivePerformance = function(toFromState, options, perform) {
 
 	rfPlot <- list(
+		title = "placeholder",
 		width = 360,# options[["plotWidth"]],
 		height = 240, #options[["plotHeight"]],
 		custom = list(width = "plotWidth", height = "plotHeight"),
 		data = ""
 	)
 
-	if (!is.null(toFromState)) { # are there results to plot?
+	if (perform == "run" && !is.null(toFromState)) { # are there results to plot?
 
 		res <- toFromState[["res"]]
-		print(str(res))
 		x <- 1:res[["ntree"]]
 
 		if (res[["type"]] == "regression") {
@@ -380,19 +373,23 @@ MLRegressionRandomForest <- function (dataset = NULL, options, perform = "run",
 			# the help page uses MDSplot, but this is something very different
 			# it makes a custom call to stats::cmdscales
 			# We could make something? I do not know what is regularly used
-			randomForest::MDSplot(res, data[, "Species"])
+			# randomForest::MDSplot(res, data[, "Species"])
 
 		}
 
 		rfPlot[["title"]] <- yl # redundant?
 
-		if (res$type != "unsupervised")
-			rfPlot[["data"]] <- .plotMultipleLines(x = x, y = y, options = options, debug = debug,
-												   xlab = "Trees", ylab = yl)
-	}
 
+		if (res$type != "unsupervised")
+			rfPlot[["data"]] <- .plotMultipleLines(x = x, y = y, options = options,
+												   xlab = "Trees", ylab = yl)
+		
+		rfPlot[["status"]] <- "completed"
+		# staterfPlot = rfPlot
+		
+	}
+	
 	return(rfPlot)
 
 }
-
 
