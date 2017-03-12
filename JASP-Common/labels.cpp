@@ -197,20 +197,18 @@ const Label &Labels::labelFor(int index) const
 	throw runtime_error("Cannot find this entry");
 }
 
-bool Labels::setLabelFromRow(int row, const string &display)
+void Labels::setLabelFromRow(int row, const string &display)
 {
 	if (row >= (int)_labels.size())
 	{
 		std::cout << "Set label with wrong row: " << row << ", size: " << _labels.size() << std::endl;
 		std::cout.flush();
-		return false;
+		return;
 	}
 	Label &label = _labels.at(row);
 	if (label.text() == display)
-		return false;
-
+		return;
 	_setNewStringForLabel(label, display);
-	return true;
 }
 
 void Labels::_setNewStringForLabel(Label &label, const string &display)

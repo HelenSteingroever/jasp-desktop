@@ -22,9 +22,6 @@ VariablesWidget::VariablesWidget(QWidget *parent) :
 
 	ui->labelsView->setModel(_levelsTableModel);
 	ui->columnheader->setText("");
-	(ui->labelsView->verticalHeader())->hide();
-
-	setToolTip("Double-click on a label to change it");
 
 	connect(ui->moveUpButton, SIGNAL(clicked()), this, SLOT(moveUpClicked()));
     connect(ui->moveDownButton, SIGNAL(clicked()), this, SLOT(moveDownClicked()));

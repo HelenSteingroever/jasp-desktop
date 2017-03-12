@@ -64,7 +64,7 @@ public:
 	std::map<int, std::string> &getOrgStringValues();
 	void setOrgStringValues(int key, std::string value);
 
-	bool setLabelFromRow(int row, const std::string &display);
+	void setLabelFromRow(int row, const std::string &display);
 	void setLabelFromValue(int value, const std::string &display);
 	std::string getLabelFromRow(int);
 	std::string getValueFromRow(int);
