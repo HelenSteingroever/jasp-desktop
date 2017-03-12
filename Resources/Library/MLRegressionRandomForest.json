@@ -43,7 +43,8 @@
 		},
 		{
 			"name": "tableVariableImportance",
-			"type": "Boolean"
+			"type": "Boolean",
+      "default" : true
 		},
 		{
 			"name": "tableConfusion",
@@ -94,6 +95,16 @@
 			"type": "List",
 			"options": [ "auto", "manual" ],
 			"default": "auto"
+		},
+    		{
+			"default": 320,
+			"name": "plotWidth",
+			"type": "Integer"
+		},
+		{
+			"default": 240,
+			"name": "plotHeight",
+			"type": "Integer"
 		}
 	]
 }
