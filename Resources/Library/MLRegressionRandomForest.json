@@ -33,6 +33,10 @@
 			"name": "plotVariableImportance",
 			"type": "Boolean"
 		},
+    {
+			"name": "plotTreesVsModelError",
+			"type": "Boolean"
+		},
 		{
 			"name": "plotVariableImportanceShowValues",
 			"type": "Boolean"
@@ -97,12 +101,12 @@
 			"default": "auto"
 		},
     		{
-			"default": 320,
+			"default": 640,
 			"name": "plotWidth",
 			"type": "Integer"
 		},
 		{
-			"default": 240,
+			"default": 480,
 			"name": "plotHeight",
 			"type": "Integer"
 		}

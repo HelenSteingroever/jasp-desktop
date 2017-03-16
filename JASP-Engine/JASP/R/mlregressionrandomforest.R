@@ -15,8 +15,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-MLRegressionRandomForest <- function (dataset = NULL, options, perform = "run",
-									  callback = function(...) list(status = "ok"), ...) {
+MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
+									 callback = function(...) 0, ...) {
+									  # callback = function(...) list(status = "ok"), ...) {
 
 	print(str(options))
 	## Read Dataset ## ----
@@ -31,28 +32,40 @@ MLRegressionRandomForest <- function (dataset = NULL, options, perform = "run",
 
 		if (perform == "run") {
 
-			dataset <- .readDataSetToEnd(columns.as.numeric = variables.to.read,
+			dataset <- .readDataSetToEnd(columns = variables.to.read,
 										 columns.as.factor = NULL,
 										 exclude.na.listwise = NULL)
 
 		} else {
 
-			dataset <- .readDataSetHeader(columns.as.numeric = variables.to.read,
+			dataset <- .readDataSetHeader(columns = variables.to.read,
 										  columns.as.factor = NULL)
 
 		}
 
 	} else {
 
-		# dataset <- .vdf(dataset,
-		# 				columns.as.numeric = variables.to.read,
-		# 				columns.as.factor = variables.to.read)
-
+		dataset <- .vdf(dataset, columns = variables.to.read)
+		
 	}
+
+	# This problem can occur when reading the dataset with the columns argument:
+	# vec <- structure(c(1L,2L, 33L), .Label = c("first", "second"), class = "factor")
+	# print(vec)
+	# levels(vec) <- levels(vec)
+	# print(vec)
+	
+	# This fixes it:	
+	seqFactor <- which(sapply(dataset, class) == "factor")
+	for (i in seqFactor) 
+		levels(dataset[[i]]) <- levels(dataset[[i]])
+	
+	print("str(dataset)")
+	print(str(dataset))
 
 	# ensures order of variables matches order of columns in dataset (first column is target)
 	variables <- variables[match(.unv(colnames(dataset)), variables, nomatch = 0L)]
-
+	
 	## TODO: Retrieve State ## ----
 
 	# state <- .retrieveState()
@@ -79,20 +92,21 @@ MLRegressionRandomForest <- function (dataset = NULL, options, perform = "run",
 		.meta = list(
 			list(name = "title",                     type = "title"),
 			list(name = "tableVariableImportance",   type = "table"),
-			list(name = "plotPredictivePerformance", type = "image")
+			list(name = "plotVariableImportance",    type = "image"),
+			list(name = "plotTreesVsModelError",     type = "image")
 		)
 	)
 
 	## Do Analysis ## ----
 	errorList <- NULL
 
-	if (is.null(toFromState) && !is.null(variables)) { # implies old state was unusable
+	if (is.null(toFromState) && !is.null(variables) && !is.null(target)) { # implies old state was unusable
 
 		# check for errors
 		anyErrors <- .hasErrors(dataset = dataset, perform = perform, type = c("infinity", "variance"))
-
+		.pprint(anyErrors)
 		doUpdate <- base::identical(anyErrors, FALSE)
-
+		.pprint(doUpdate)
 		if (doUpdate) { # do analysis
 
 			toFromState <- .MLRFAnalysis(dataset, purpose = "regression", perform = perform,
@@ -100,7 +114,7 @@ MLRegressionRandomForest <- function (dataset = NULL, options, perform = "run",
 
 		} else { # show error message
 
-			errorList <- list(errorType = "badData", errorMessage = anyErrors$message)
+			errorList <- list(errorType = "badData", errorMessage = anyErrors[["message"]])
 
 		}
 
@@ -110,20 +124,28 @@ MLRegressionRandomForest <- function (dataset = NULL, options, perform = "run",
 
 	}
 
-	results[["VariableImportance"]][["error"]] <- errorList
-
 	## Create Output ## ----
-	if (doUpdate) {
-
+	
+	if (doUpdate) { # no errors were found
+		
 		if (options[["tableVariableImportance"]])
-			results[["tableVariableImportance"]] <- .MLRFVarImpTb(toFromState, variables, perform = perform)
+			results[["tableVariableImportance"]] <- .MLRFVarImpTb(toFromState = toFromState, variables = variables, perform = perform)
+		
+		if (options[["plotTreesVsModelError"]])
+			results[["plotTreesVsModelError"]] <- .MLRFplotTreesVsModelError(toFromState = toFromState, options = options,
+																					 perform = perform)
+		
+		if (options[["plotVariableImportance"]])
+			results[["plotVariableImportance"]] <- .MLRFplotVariableImportance(toFromState = toFromState, options = options, 
+																			   variables = variables, perform = perform)
 
-		if (options[["plotPredictivePerformance"]])
-			results[["plotPredictivePerformance"]] <- .MLRFplotPredictivePerformance(toFromState, variables, perform = perform)
+	} else { # add error messages
+		
+		# Ensure there is always a table to plot the error on top of
+		results[["tableVariableImportance"]] <- .MLRFVarImpTb(toFromState = toFromState, variables = variables, perform = perform)
+		results[["tableVariableImportance"]][["error"]] <- errorList
 
 	}
-
-
 	## Save State ##
 
 
@@ -141,7 +163,9 @@ MLRegressionRandomForest <- function (dataset = NULL, options, perform = "run",
 
 .pprint <- function(x) {
 	y <- deparse(substitute(x))
-	print(sprintf("%s = {%s}", y, capture.output(dput(x))))
+	print(y)
+	print(x)
+	#print(sprintf("%s = {%s}", y, capture.output(dput(x))))
 }
 
 .MLRFAnalysis <- function(dataset, purpose, options, variables, target, perform) {
@@ -304,50 +328,12 @@ MLRegressionRandomForest <- function (dataset = NULL, options, perform = "run",
 
 }
 
-.plotMultipleLines = function(x, y, options, Rdebug, ...) {
-
-	args <- list(x = x, y = y, ...)
-
-	# default plotting arguments
-	defArgs <- list(type = 'l', lty = 1, ylab = "", xlab = "",
-					col = colorspace::rainbow_hcl(NCOL(y)),
-					lwd = 3, las = 1, bty = 'n')
-
-	# lookup and apply defaults
-	for (name in names(defArgs)) {
-		if (is.null(args[[name]]))
-			args[[name]] <- defArgs[[name]]
-	}
-
-	# par from clean R compendium
-	par(cex.main = 1.5, cex.lab = 1.5, cex.axis = 1.3,
-		mar = c(5, 6, 4, 5) + 0.1, mgp = c(3.5, 1, 0),
-		font.lab = 2)
-
-	# make plot
-	content = ""
-	if (!Sys.getenv("RSTUDIO") == "1")
-		image <- .beginSaveImage(width = 360, height = 240)
-
-	if (NCOL(args[["y"]]) == 1) { 	# default plot
-		do.call(graphics::plot, args)
-	} else { 						# matplot
-		do.call(graphics::matplot, args)
-	}
-	
-	if (!Sys.getenv("RSTUDIO") == "1") {
-		content <- .endSaveImage(image)
-	} 
-		
-	return(content)
-}
-
-.MLRFplotPredictivePerformance = function(toFromState, options, perform) {
+.MLRFplotTreesVsModelError <- function(toFromState, options, perform) {
 
 	rfPlot <- list(
-		title = "placeholder",
-		width = 360,# options[["plotWidth"]],
-		height = 240, #options[["plotHeight"]],
+		title = "Number of trees vs model error",
+		width = options[["plotWidth"]],
+		height = options[["plotHeight"]],
 		custom = list(width = "plotWidth", height = "plotHeight"),
 		data = ""
 	)
@@ -376,13 +362,30 @@ MLRegressionRandomForest <- function (dataset = NULL, options, perform = "run",
 			# randomForest::MDSplot(res, data[, "Species"])
 
 		}
+		
+		rfPlot[["title"]] <- paste0(rfPlot[["title"]], " (", yl, ")") 
 
-		rfPlot[["title"]] <- yl # redundant?
+		if (res$type != "unsupervised") {
+			
+			# install.packages("ggplot2", dependencies = TRUE, 
+			# 				 lib = "C:/Users/donvd/OneDrive/Documenten/EJgit/build-JASP-JASP_64-Debug/R/library")
+			
+			g <- drawCanvas(xName = "Trees", yName = yl, xBreaks = pretty(x), yBreaks = pretty(y))
+			g <- drawLines(g, df = data.frame(x = x, y = y), color = "gray",  show.legend = FALSE)
+			g <- themeJasp(g)
 
-
-		if (res$type != "unsupervised")
-			rfPlot[["data"]] <- .plotMultipleLines(x = x, y = y, options = options,
-												   xlab = "Trees", ylab = yl)
+			content <- ""
+			if (!Sys.getenv("RSTUDIO") == "1")
+				image <- .beginSaveImage(width = options[["plotWidth"]], height = options[["plotHeight"]])
+			
+			print(g)
+			
+			if (!Sys.getenv("RSTUDIO") == "1") 
+				content <- .endSaveImage(image)
+			
+			rfPlot[["data"]] <- content
+			
+		}
 		
 		rfPlot[["status"]] <- "completed"
 		# staterfPlot = rfPlot
@@ -393,3 +396,204 @@ MLRegressionRandomForest <- function (dataset = NULL, options, perform = "run",
 
 }
 
+.MLRFplotVariableImportance <- function(toFromState, options, variables, perform) {
+	
+	rfPlot <- list(
+		title = "Relative Importance of Variables",
+		width = options[["plotWidth"]],
+		height = options[["plotHeight"]],
+		custom = list(width = "plotWidth", height = "plotHeight"),
+		data = ""
+	)
+	
+	if (perform == "run" && !is.null(toFromState)) { # are there results to plot?
+		
+		res <- toFromState[["res"]]
+		toPlot <- data.frame(
+			Feature = variables,
+			Importance = unname(randomForest::importance(toFromState$res, type = 1))
+		)
+		toPlot <- toPlot[order(toPlot[["Importance"]], decreasing = TRUE), ]
+		
+		axisLimits <- range(pretty(toPlot[["Importance"]]))
+		axisLimits[1] <- min(c(0, axisLimits[1]))
+
+		p <- ggplot2::ggplot(toPlot, ggplot2::aes(x=reorder(Feature, Importance), y=Importance)) +
+			ggplot2::geom_bar(stat="identity", fill="gray40") +
+			ggplot2::coord_flip() + 
+			ggplot2::theme_light(base_size=20) +
+			ggplot2::scale_x_discrete(name = "") +
+			ggplot2::scale_y_continuous(name = "Variable Importance", 
+										limits = axisLimits) + 
+			# ggplot2::ggtitle("Relative Importance of Variables") +
+			ggplot2::theme(plot.title = ggplot2::element_text(size=18))
+
+		content = ""
+		if (!Sys.getenv("RSTUDIO") == "1")
+			image <- .beginSaveImage(width = options[["plotWidth"]], height = options[["plotHeight"]])
+		
+		print(p)
+		
+		if (!Sys.getenv("RSTUDIO") == "1") {
+			content <- .endSaveImage(image)
+		}
+		
+		rfPlot[["data"]] <- content
+		rfPlot[["status"]] <- "completed"
+		
+	}
+	
+	return(rfPlot)
+	
+}
+
+# plot functions
+themeJasp = function(graph, fontsize = 18, legend.position = "auto", xyMargin = "auto",
+					 legend.cex = 1.25, axis.title.cex = 1.5, family = NULL,
+					 legend.position.left = c(.2, .9), legend.position.right = c(.8, .9)) {
+
+	# "auto" always means: base this on the graph object.
+	# In documentation "otherwise" refers to non "auto" usage.
+
+	# graph: graph object to add theme to
+	# fontsize: general size of text
+	# legend.position: otherwise as described in ?ggplot2::theme
+	# xyMargin: otherwise a list where the 1st element is the xMargin and the second the yMargin. Both a numeric vector of length 4
+	# legend.cex: legend text has size fontsize*legend.cex
+	# axis.title.cex = axis label has size fontsize*axis.title.cex
+	# family: font family
+	# legend.position.left/ legend.position.right: where to place the legend? (units relative to plot window; c(.5, .5) = center)
+
+	gBuild = ggplot2::ggplot_build(graph)
+
+	# TRUE if graph contains data, FALSE otherwise
+	hasData = length(gBuild$data)  != 2
+
+	if (xyMargin == "auto") {
+
+		# get size of axis tick labels
+		xBreaks = gBuild$layout$panel_ranges[[1]]$x.labels
+		yBreaks = gBuild$layout$panel_ranges[[1]]$y.labels
+		xCex = 0# max(nchar(xBreaks, type = "width")) - 4 # is this even necessary ?
+		yCex = max(nchar(yBreaks, type = "width")) - 4
+		xMargin = c(20 + 5 * xCex, 0, 0, 0) # margin x-label to x-axis
+		yMargin = c(0, 20 + 5 * yCex, 0, 0) # margin y-label to y-axis
+
+	} else {
+
+		xMargin = xyMargin[[1]]
+		yMargin = xyMargin[[2]]
+
+	}
+
+	# determine legend position
+	if (hasData && legend.position == "auto") {
+
+		idxYmax = which.max(gBuild$data[[3]]$y)[1]
+		xAtYmax = gBuild$data[[3]]$x[idxYmax]
+		xCenter = mean(gBuild$layout$panel_ranges[[1]]$x.range, na.rm = TRUE)
+		
+		print(gBuild$layout$panel_ranges[[1]]$x.range)
+		print(xCenter)
+
+		if (isTRUE(xAtYmax > xCenter)) { # mode right of middle
+
+			legend.position = c(.15, .9)
+
+		} else { # mode left of middle
+
+			legend.position = c(.85, .9)
+
+		}
+	}
+
+	return(
+		graph + themeJaspRaw(legend.position = legend.position, xMargin = xMargin, yMargin = yMargin,
+							 legend.cex = legend.cex, axis.title.cex = axis.title.cex, family = family,
+							 fontsize = fontsize)
+	)
+
+}
+
+# for manual usage
+themeJaspRaw = function(legend.position = "none", xMargin = c(0, 0, 0, 0), yMargin = c(0, 0, 0, 0),
+						legend.cex = 1, axis.title.cex = 1, family = NULL, fontsize = 12) {
+
+	ggplot2::theme(
+		panel.spacing = grid::unit(2, "cm"),
+		panel.grid = ggplot2::element_blank(),
+		panel.background = ggplot2::element_rect(color = "white", fill = "white"),
+		legend.background = ggplot2::element_rect(color = "white", fill = "white"),
+		legend.key = ggplot2::element_rect(color = "white", fill = "white"),
+		legend.key.size = grid::unit(2, "cm"),
+		legend.text = ggplot2::element_text(family = family, size = legend.cex*fontsize),
+		legend.title = ggplot2::element_blank(),
+		legend.position = legend.position,
+		axis.line = ggplot2::element_blank(),
+		axis.ticks = ggplot2::element_line(size = 1.25), # tick width
+		axis.ticks.length = grid::unit(.5, "cm"), # tick length
+		axis.text = ggplot2::element_text(family = family, size = fontsize),
+		axis.title = ggplot2::element_text(family = family, size = axis.title.cex*fontsize),
+		# NOT SUPPORTED BY JASPS ggplot 1.0.0 (2.2.1 is the latest version)
+		axis.title.x = ggplot2::element_text(margin = ggplot2::margin(xMargin)),
+		axis.title.y = ggplot2::element_text(margin = ggplot2::margin(yMargin))
+	)
+
+}
+
+drawCanvas = function(xName, yName, xBreaks, yBreaks) {
+
+	graph = ggplot2::ggplot() +
+		ggplot2::scale_x_continuous(name = xName, breaks = xBreaks) +
+		ggplot2::scale_y_continuous(name = yName, breaks = yBreaks)
+	graph = ggplotBtyN(graph, xBreaks = xBreaks, yBreaks = yBreaks, size = 2)
+
+	return(graph)
+
+}
+
+drawLines = function(graph, df, mapping = NULL, size = 1.25, show.legend = TRUE, ...) {
+
+	if (is.null(mapping)) {
+
+		nms = colnames(df)
+		
+		mapping <- switch(as.character(length(nms)),
+			"2" = ggplot2::aes_string(x = nms[1], y = nms[2]),
+			"3" = ggplot2::aes_string(x = nms[1], y = nms[2], group = nms[3], linetype = nms[3])
+		)		 
+		
+		# mapping = ggplot2::aes_string(x = nms[1], y = nms[2], group = nms[3], linetype = nms[3])
+
+	}
+
+	graph = graph +
+		ggplot2::geom_line(data = df, mapping = mapping, size = size, show.legend = show.legend, ...)
+
+	return(graph)
+
+}
+
+ggplotBtyN = function(graph, xBreaks = NULL, yBreaks = NULL, ...) {
+
+	if (is.null(xBreaks)) {
+		# todo get breaks from graph -- is this really necessary?
+	}
+	if (is.null(yBreaks)) {
+		# todo get breaks from graph -- is this really necessary?
+	}
+
+	# get x-lim/ y-lim and add 5% of the total range
+	xL = c(xBreaks[1], xBreaks[length(xBreaks)]) #+ c(-1, 1) * .02*diff(range(xBreaks))
+	yL = c(yBreaks[1], yBreaks[length(yBreaks)]) #+ c(-1, 1) * .01 # *diff(range(xBreaks))
+
+	return(
+		graph +
+			ggplot2::annotate(geom = "segment", y = -Inf, yend = -Inf,
+							  x = xL[1], xend = xL[2], ...) +
+			ggplot2::annotate(geom = "segment", x = -Inf, xend = -Inf,
+							  y = yL[1], yend = yL[2], ...)
+		
+	)
+
+}
