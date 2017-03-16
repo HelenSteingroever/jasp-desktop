@@ -49,7 +49,7 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 		
 	}
 
-	# This problem can occur when reading the dataset with the columns argument:
+	# This problem can occur when reading the dataset with the columns argument: (reference: http://stackoverflow.com/questions/41441665/how-to-fix-a-malformed-factor)
 	# vec <- structure(c(1L,2L, 33L), .Label = c("first", "second"), class = "factor")
 	# print(vec)
 	# levels(vec) <- levels(vec)
