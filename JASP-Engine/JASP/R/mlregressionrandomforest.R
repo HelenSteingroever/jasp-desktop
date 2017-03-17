@@ -32,20 +32,18 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 
 		if (perform == "run") {
 
-			dataset <- .readDataSetToEnd(columns = variables.to.read,
-										 columns.as.factor = NULL,
-										 exclude.na.listwise = NULL)
+			dataset <- .readDataSetToEnd(columns = variables.to.read, exclude.na.listwise = NULL)
 
 		} else {
 
-			dataset <- .readDataSetHeader(columns = variables.to.read,
-										  columns.as.factor = NULL)
+			dataset <- .readDataSetHeader(columns = variables.to.read)
 
 		}
 
 	} else {
 
-		dataset <- .vdf(dataset, columns = variables.to.read)
+		if (!Sys.getenv("RSTUDIO") == "1") 
+			dataset <- .vdf(dataset, columns = variables.to.read)
 		
 	}
 
@@ -55,11 +53,15 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 	# levels(vec) <- levels(vec)
 	# print(vec)
 	
-	# This fixes it:	
-	seqFactor <- which(sapply(dataset, class) == "factor")
-	for (i in seqFactor) 
-		levels(dataset[[i]]) <- levels(dataset[[i]])
-	
+	# This fixes it:
+	colIdx <- sapply(dataset, is.factor)
+	if (is.logical(colIdx)) {
+		
+		seqFactor <- which(colIdx)
+		for (var in seqFactor) 
+			levels(dataset[[var]]) <- levels(dataset[[var]])
+		
+	}
 	print("str(dataset)")
 	print(str(dataset))
 
@@ -141,8 +143,8 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 
 	} else { # add error messages
 		
-		# Ensure there is always a table to plot the error on top of
-		results[["tableVariableImportance"]] <- .MLRFVarImpTb(toFromState = toFromState, variables = variables, perform = perform)
+		# Create an empty table to show the error
+		results[["tableVariableImportance"]] <- .MLRFVarImpTb(toFromState = NULL, variables = variables, perform = perform)
 		results[["tableVariableImportance"]][["error"]] <- errorList
 
 	}
@@ -417,6 +419,7 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 		
 		axisLimits <- range(pretty(toPlot[["Importance"]]))
 		axisLimits[1] <- min(c(0, axisLimits[1]))
+		axisLimits[2] <- max(c(0, axisLimits[2]))
 
 		p <- ggplot2::ggplot(toPlot, ggplot2::aes(x=reorder(Feature, Importance), y=Importance)) +
 			ggplot2::geom_bar(stat="identity", fill="gray40") +
