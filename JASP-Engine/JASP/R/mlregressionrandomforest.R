@@ -180,8 +180,12 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 	target <- .v(target) # targets
 
 	# defaults for everything set to "auto"
-	if (is.character(options[["noOfTrees"]]))
+	if (options[["noOfTrees"]] == "auto") {
 		options[["noOfTrees"]] <- 500
+	} else { # manual
+		options[["noOfTrees"]] <- options[["numberOfTrees"]]
+	}
+		
 
 	if (is.character(options[["noOfPredictors"]]))
 		options[["noOfPredictors"]] <- ifelse(purpose == "regression",

@@ -33,7 +33,7 @@
 			"name": "plotVariableImportance",
 			"type": "Boolean"
 		},
-    {
+                {
 			"name": "plotTreesVsModelError",
 			"type": "Boolean"
 		},
@@ -48,7 +48,7 @@
 		{
 			"name": "tableVariableImportance",
 			"type": "Boolean",
-      "default" : true
+                         "default" : true
 		},
 		{
 			"name": "tableConfusion",
@@ -63,6 +63,11 @@
 			"type": "List",
 			"options": [ "auto", "manual" ],
 			"default": "auto"
+		},
+		{
+			"name": "numberOfTrees”,
+			"type": “Integer”,
+			"min": 1
 		},
 		{
 			"name": "noOfPredictors",
