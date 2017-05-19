@@ -66,14 +66,19 @@
 		},
 		{
 			"name": "numberOfTrees”,
-			"type": “Integer”,
+			"type": "Integer",
 			"min": 1
 		},
 		{
-			"name": "noOfPredictors",
+			"name": "noOfPredictors", 
 			"type": "List",
 			"options": [ "auto", "manual" ],
 			"default": "auto"
+		},
+		{
+			"name": "numberOfPredictors”,
+			"type": "Integer",
+			"min": 1
 		},
 		{
 			"name": "minimumTerminalNodeSize",
@@ -104,6 +109,11 @@
 			"type": "List",
 			"options": [ "auto", "manual" ],
 			"default": "auto"
+		},
+		{
+			"name": "seed",
+			"type": "Integer",
+			"min": 1
 		},
     		{
 			"default": 640,

@@ -19,7 +19,6 @@
 #include "maintablehorizontalheader.h"
 
 #include <QMouseEvent>
-#include <QDebug>
 
 MainTableHorizontalHeader::MainTableHorizontalHeader(QWidget *parent) :
 	QHeaderView(Qt::Horizontal, parent)
@@ -56,12 +55,25 @@ void MainTableHorizontalHeader::mouseMoveEvent(QMouseEvent *event)
 	
 	this->setToolTip("No valid column to change");
 	
+<<<<<<< HEAD
 	if (x >= 4 && x <= 24)
 	{
 		this->setToolTip("Click on icon to change measurement level");
 	}
 	else
 	{
+=======
+	if (x < 4)
+	{
+		this->setToolTip("Click to change column size");
+	}
+	else if (x >= 4 && x <= 24)
+	{
+		this->setToolTip("Click on icon to change measurement level");
+	}
+	else if (x > 24)
+	{
+>>>>>>> jasp-stats/development
 		//Check for valid column 
 		if (_columnSelected >= 0)
 		{
@@ -70,7 +82,12 @@ void MainTableHorizontalHeader::mouseMoveEvent(QMouseEvent *event)
 			else
 				this->setToolTip("Click on column name to change labels");
 		}
+<<<<<<< HEAD
 	}					
+=======
+	}
+	return QHeaderView::mouseMoveEvent(event);
+>>>>>>> jasp-stats/development
 }
 
 
@@ -78,6 +95,7 @@ void MainTableHorizontalHeader::mousePressEvent(QMouseEvent *event)
 {
 	QPoint pos = event->pos();
 	int index = logicalIndexAt(pos);
+<<<<<<< HEAD
 	int itemPos = sectionViewportPosition(index);
 	_columnSelected = index;
 	int x = pos.x() - itemPos;
@@ -93,6 +111,28 @@ void MainTableHorizontalHeader::mousePressEvent(QMouseEvent *event)
 		//Check for valid column 
 		if (_columnSelected >= 0 && _dataSetModel->getColumnType(_columnSelected) != Column::ColumnTypeScale)
 			emit columnNamePressed(_columnSelected);
+=======
+	_columnSelected = index;
+	if (index >= 0)
+	{
+		int itemPos = sectionViewportPosition(index);
+		int x = pos.x() - itemPos;
+
+		if (x >= 4 && x <= 24)
+		{
+			QPoint menuPos = this->mapToGlobal(QPoint(itemPos, this->height()));
+			_menu->move(menuPos);
+			_menu->show();
+		}
+		else if (x >= 24)
+		{
+			bool lastColumn = (index == count() - 1);
+			int nextItemPos = lastColumn ? length() : sectionViewportPosition(index + 1);
+			int nextX = nextItemPos - pos.x();
+			if (nextX >= 4 && _dataSetModel->getColumnType(_columnSelected) != Column::ColumnTypeScale)
+				emit columnNamePressed(_columnSelected);
+		}
+>>>>>>> jasp-stats/development
 	}
 
 	QHeaderView::mousePressEvent(event);
