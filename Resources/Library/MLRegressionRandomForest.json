@@ -51,9 +51,8 @@
                          "default" : true
 		},
 		{
-			"name": "tableSummary",
-			"type": "Boolean",
-                         "default" : true
+			"name": "tableClassification",
+			"type": "Boolean"
 		},
 		{
 			"name": "calculateProximityMatrix",
@@ -105,8 +104,8 @@
 			"name": "percentageDataBootstrap",
 			"type": "Number",
                         "min": 0,
-                        "max": 1,
-                        "value": 1.0
+                        "max": 100,
+                        "value": 80
 		},		
 		{
 			"name": "dataTrainingModel",
@@ -118,8 +117,8 @@
 			"name": "percentageDataTraining",
 			"type": "Number",
                         "min": 0,
-                        "max": 1,
-                        "value": 1.0
+                        "max": 100,
+                        "value": 80
 		},			
 		{
 			"name": "maximumTerminalNodeSize",
