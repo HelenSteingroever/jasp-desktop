@@ -38,7 +38,7 @@
 			"type": "Boolean"
 		},
 		{
-			"name": "plotVariableImportanceShowValues",
+			"name": "plotNodeImpurity",
 			"type": "Boolean"
 		},
 		{

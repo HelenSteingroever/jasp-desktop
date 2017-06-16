@@ -422,9 +422,19 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 	if (perform == "run" && !is.null(toFromState)) { # are there results to plot?
 
 		res <- toFromState[["res"]]
+		
+		if (options[["plotNodeImpurity"]]) {
+			impType <- 2  
+			xlabImpPlot <- "Mean decrease in node impurity"
+		} else {
+			impType <- 1  
+			xlabImpPlot <- "Mean decrease in accuracy"
+		}
+		
+				
 		toPlot <- data.frame(
 			Feature = variables,
-			Importance = unname(randomForest::importance(toFromState$res, type = 1))
+			Importance = unname(randomForest::importance(toFromState$res, type = impType))
 		)
 		toPlot <- toPlot[order(toPlot[["Importance"]], decreasing = FALSE), ]  # HELEN: decr=F
 
@@ -447,7 +457,7 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 			image <- .beginSaveImage(width = options[["plotWidth"]], height = options[["plotHeight"]])
 
 		#print(p)
-		barplot(toPlot[[2]], names.arg = toPlot[[1]], horiz = TRUE, xlab = "Mean decrease in accuracy")
+		barplot(toPlot[[2]], names.arg = toPlot[[1]], horiz = TRUE, xlab = xlabImpPlot)
 
 		if (!Sys.getenv("RSTUDIO") == "1") {
 			content <- .endSaveImage(image)

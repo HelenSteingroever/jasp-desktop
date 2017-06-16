@@ -507,7 +507,7 @@
           </widget>
          </item>
          <item row="2" column="1" colspan="3">
-          <widget class="BoundCheckBox" name="plotVariableImportanceShowValues">
+          <widget class="BoundCheckBox" name="plotNodeImpurity">
            <property name="enabled">
             <bool>false</bool>
            </property>
@@ -518,7 +518,7 @@
             </sizepolicy>
            </property>
            <property name="text">
-            <string>Accuracy or node impurity</string>
+            <string>Use node impurity</string>
            </property>
           </widget>
          </item>
@@ -1139,7 +1139,7 @@
   <connection>
    <sender>plotVariableImportance</sender>
    <signal>clicked(bool)</signal>
-   <receiver>plotVariableImportanceShowValues</receiver>
+   <receiver>plotNodeImpurity</receiver>
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
