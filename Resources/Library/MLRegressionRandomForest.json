@@ -20,21 +20,27 @@
 			"template": [
 				{
 					"name": "components",
-					"type": "Term"
+					"type": "Term" 
 				},
 				{
 					"name": "isNuisance",
 					"type": "Boolean"
 				}
 			],
-			"type": "Table"
+			"type": "Table"  
 		},
 		{
 			"name": "plotVariableImportance",
 			"type": "Boolean"
 		},
 		{
-			"name": "plotVariableImportanceShowValues",
+			"name": "plotImportance",
+			"type": "List",
+			"options": [ "plotAccuracy", "plotNodeImpurity" ],
+			"default": "plotAccuracy"
+		},						
+        {
+			"name": "plotTreesVsModelError",
 			"type": "Boolean"
 		},
 		{
@@ -43,10 +49,11 @@
 		},
 		{
 			"name": "tableVariableImportance",
-			"type": "Boolean"
+			"type": "Boolean",
+                         "default" : true
 		},
 		{
-			"name": "tableConfusion",
+			"name": "tableClassification",
 			"type": "Boolean"
 		},
 		{
@@ -60,10 +67,22 @@
 			"default": "auto"
 		},
 		{
-			"name": "noOfPredictors",
+			"name": "numberOfTrees",
+			"type": "Integer",
+			"min": 1,
+			"default": 1   
+		},
+		{
+			"name": "noOfPredictors", 
 			"type": "List",
 			"options": [ "auto", "manual" ],
 			"default": "auto"
+		},
+		{
+			"name": "numberOfPredictors",
+			"type": "Integer",
+			"min": 1,
+                        "default": 1
 		},
 		{
 			"name": "minimumTerminalNodeSize",
@@ -72,11 +91,24 @@
 			"default": "auto"
 		},
 		{
+			"name": "modelMinimumTerminalNode",
+			"type": "Integer",
+			"min": 1,
+			"default": 1   
+		},			
+		{
 			"name": "dataBootstrapModel",
 			"type": "List",
 			"options": [ "auto", "manual" ],
 			"default": "auto"
 		},
+		{
+			"name": "numberDataBootstrap",
+			"type": "Number",
+                        "min": 0,
+                        "max": 100,
+                        "value": 63.2
+		},		
 		{
 			"name": "dataTrainingModel",
 			"type": "List",
@@ -84,16 +116,47 @@
 			"default": "auto"
 		},
 		{
+			"name": "percentageDataTraining",
+			"type": "Number",
+                        "min": 0,
+                        "max": 100,
+                        "value": 80
+		},			
+		{
 			"name": "maximumTerminalNodeSize",
 			"type": "List",
 			"options": [ "auto", "manual" ],
 			"default": "auto"
-		},
+		},		
+		{
+			"name": "modelMaximumTerminalNode",
+			"type": "Integer",
+			"min": 1,
+			"default": 1   
+		},		
+		
 		{
 			"name": "seedBox",
 			"type": "List",
 			"options": [ "auto", "manual" ],
 			"default": "auto"
+		},
+		{
+			"name": "seed",
+			"type": "Number",
+                        "min": -10000000,
+                        "max": 10000000,
+                        "value": 1.0
+		},
+    		{
+			"default": 640,
+			"name": "plotWidth",
+			"type": "Integer"
+		},
+		{
+			"default": 480,
+			"name": "plotHeight",
+			"type": "Integer"
 		}
 	]
 }
