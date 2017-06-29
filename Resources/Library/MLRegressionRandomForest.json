@@ -33,12 +33,14 @@
 			"name": "plotVariableImportance",
 			"type": "Boolean"
 		},
-                {
-			"name": "plotTreesVsModelError",
-			"type": "Boolean"
-		},
 		{
-			"name": "plotNodeImpurity",
+			"name": "plotImportance",
+			"type": "List",
+			"options": [ "plotAccuracy", "plotNodeImpurity" ],
+			"default": "plotAccuracy"
+		},						
+        {
+			"name": "plotTreesVsModelError",
 			"type": "Boolean"
 		},
 		{
@@ -101,11 +103,11 @@
 			"default": "auto"
 		},
 		{
-			"name": "percentageDataBootstrap",
+			"name": "numberDataBootstrap",
 			"type": "Number",
                         "min": 0,
                         "max": 100,
-                        "value": 80
+                        "value": 63.2
 		},		
 		{
 			"name": "dataTrainingModel",

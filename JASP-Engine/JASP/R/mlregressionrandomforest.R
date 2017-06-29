@@ -187,6 +187,10 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 	preds <- .v(variables) # predictors
 	target <- .v(target) # targets
 
+
+	# training and test data
+	n <- nrow(dataset)
+	
 	# defaults for everything set to "auto"
 	if (options[["noOfTrees"]] == "auto") {
 		options[["noOfTrees"]] <- 500
@@ -199,17 +203,11 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 	} else if (options[["noOfPredictors"]] == "manual") {
 		options[["noOfPredictors"]] <- as.integer(options[["numberOfPredictors"]])
 	}
-
+	
 	if (options[["dataBootstrapModel"]] == "auto") {
-		options[["dataBootstrapModel"]] <- 100
+		options[["dataBootstrapModel"]] <- ceiling(.632*n)
 	} else if (options[["dataBootstrapModel"]] == "manual") {
-		options[["dataBootstrapModel"]] <- options[["percentageDataBootstrap"]]  # removed as.integer()
-	}
-
-	if (options[["dataTrainingModel"]] == "auto") { # aanpassen! check CI whether [0, 1] or [0, 100]
-		options[["dataTrainingModel"]] <- 80
-	} else if (options[["dataTrainingModel"]] == "manual") {
-		options[["dataTrainingModel"]] <- options[["percentageDataTraining"]]  # removed as.integer()
+		options[["dataBootstrapModel"]] <- ceiling(options[["numberDataBootstrap"]]/100*n)
 	}		
 
 	if (options[["maximumTerminalNodeSize"]] == "auto") {
@@ -222,28 +220,26 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 		options[["minimumTerminalNodeSize"]] <- 5
 	} else if (options[["minimumTerminalNodeSize"]] == "manual") {
 		options[["minimumTerminalNodeSize"]] <- as.integer(options[["modelMinimumTerminalNode"]])
-	}
-
-	# seed	
+	}	
+	
 	if (options[["seedBox"]] == "manual") {
 		set.seed(options[["seed"]])
 	} else {
 		set.seed(Sys.time())
+	}	
+	
+	if (options[["dataTrainingModel"]] == "auto") { # aanpassen! check CI whether [0, 1] or [0, 100]
+		options[["dataTrainingModel"]] <- 80
+	} else if (options[["dataTrainingModel"]] == "manual") {
+		options[["dataTrainingModel"]] <- options[["percentageDataTraining"]]  # removed as.integer()
 	}		
 
-	# training and test data
-	n <- nrow(dataset)
-
 	if (options[["dataTrainingModel"]] < 100) {
-
 		idxTrain <- sample(1:n, floor(options[["dataTrainingModel"]]/100*n))
 		idxTest <- (1:n)[-idxTrain]
-
 	} else {
-
 		idxTrain <- 1:n
 		idxTest <- integer(0L)
-
 	}
 
 	if (purpose %in% c("classification", "regression")) {
@@ -270,6 +266,7 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 		ytest = yTest,
 		ntree = options[["noOfTrees"]],
 		mtry = options[["noOfPredictors"]],
+		sampsize = options[["dataBootstrapModel"]],
 		nodesize = options[["minimumTerminalNodeSize"]],
 		maxnodes = options[["maximumTerminalNodeSize"]],
 		importance = TRUE, # options[["importance"]], # calc importance between rows. Always calc it, only show on user click.
@@ -423,15 +420,14 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 
 		res <- toFromState[["res"]]
 		
-		if (options[["plotNodeImpurity"]]) {
+		if (options[["plotImportance"]] == "plotAccuracy") {	
+		  impType <- 1  
+		  xlabImpPlot <- "Mean decrease in accuracy"
+		} else {
 			impType <- 2  
 			xlabImpPlot <- "Mean decrease in node impurity"
-		} else {
-			impType <- 1  
-			xlabImpPlot <- "Mean decrease in accuracy"
-		}
-		
-				
+		} 
+						
 		toPlot <- data.frame(
 			Feature = variables,
 			Importance = unname(randomForest::importance(toFromState$res, type = impType))
@@ -457,7 +453,8 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 			image <- .beginSaveImage(width = options[["plotWidth"]], height = options[["plotHeight"]])
 
 		#print(p)
-		barplot(toPlot[[2]], names.arg = toPlot[[1]], horiz = TRUE, xlab = xlabImpPlot)
+		barplot(toPlot[[2]], names.arg = toPlot[[1]], horiz = TRUE, xlab = xlabImpPlot, las = 1)
+	
 
 		if (!Sys.getenv("RSTUDIO") == "1") {
 			content <- .endSaveImage(image)
@@ -594,10 +591,11 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 			if (!Sys.getenv("RSTUDIO") == "1")
 				image <- .beginSaveImage(width = options[["plotWidth"]], height = options[["plotHeight"]])
 
+            maxRange <- ceiling(max(x, y))
 			matplot(x, y, bty = "n", las = 1, xlab = "Observed", ylab = yl, lwd = 2, pch = 1,
-			        xlim = c(1, ceiling(max(x, y))), ylim = c(1, ceiling(max(x, y))),
+			        xlim = c(1, maxRange), ylim = c(1, maxRange),
 			        cex.axis=1.2, cex.lab=1.4, cex.main=1.2, bty="n")
-			lines(1:ceiling(max(x, y)), 1:ceiling(max(x, y)))        
+			lines(1:maxRange, 1:maxRange)        
 			# print(g)
 
 			if (!Sys.getenv("RSTUDIO") == "1")

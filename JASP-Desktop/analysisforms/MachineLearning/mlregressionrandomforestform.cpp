@@ -96,8 +96,8 @@ void MLRegressionRandomForestForm::defaultOptions()
 	ui->numberOfPredictors->setSizePolicy(retain);
 	ui->numberOfPredictors->hide();
 
-	ui->percentageDataBootstrap->setSizePolicy(retain);
-	ui->percentageDataBootstrap->hide();
+	ui->numberDataBootstrap->setSizePolicy(retain);
+	ui->numberDataBootstrap->hide();
 
 	ui->percentageDataTraining->setSizePolicy(retain);
 	ui->percentageDataTraining->hide();
@@ -166,14 +166,14 @@ void MLRegressionRandomForestForm::on_auto_2_clicked(bool checked)
 void MLRegressionRandomForestForm::on_manual_3_clicked(bool checked)
 {
 	if (checked) {
-		ui->percentageDataBootstrap->show();
+		ui->numberDataBootstrap->show();
 	}
 }
 
 void MLRegressionRandomForestForm::on_auto_3_clicked(bool checked)
 {
 	if (checked) {
-		ui->percentageDataBootstrap->hide();
+		ui->numberDataBootstrap->hide();
 	}
 }
 
