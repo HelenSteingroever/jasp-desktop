@@ -108,7 +108,12 @@
                         "min": 0,
                         "max": 100,
                         "value": 63.2
-		},		
+		},	
+		{
+			"name": "samplingWithReplacement",
+			"type": "Boolean",
+                         "default" : true
+		},			
 		{
 			"name": "dataTrainingModel",
 			"type": "List",
@@ -134,7 +139,11 @@
 			"min": 1,
 			"default": 1   
 		},		
-		
+		{
+			"name": "proximity",
+			"type": "Boolean",
+                         "default" : false
+		},					
 		{
 			"name": "seedBox",
 			"type": "List",

@@ -94,7 +94,8 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 		.meta = list(
 			list(name = "title",                     type = "title"),
 			list(name = "tableSummary",              type = "table"),				
-			list(name = "tableVariableImportance",   type = "table"),		
+			list(name = "tableVariableImportance",   type = "table"),
+			list(name = "proximity",                 type = "table"),					
 			list(name = "plotVariableImportance",    type = "image"),
 			list(name = "plotTreesVsModelError",     type = "image"),
 			list(name = "plotPredictivePerformance", type = "image")
@@ -147,7 +148,10 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 
 		if (options[["plotPredictivePerformance"]])
 			results[["plotPredictivePerformance"]] <- .MLRFplotPredPerf(toFromState = toFromState, options = options,
-																		perform = perform)																			   																			   
+																		perform = perform)		
+
+		if (options[["proximity"]])
+			results[["proximity"]] <- .MLRFProxTb(toFromState = toFromState, variables = variables, perform = perform)																																			   																			   
 
 	} else { # add error messages
 
@@ -267,10 +271,11 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 		ntree = options[["noOfTrees"]],
 		mtry = options[["noOfPredictors"]],
 		sampsize = options[["dataBootstrapModel"]],
+		replace = options[["samplingWithReplacement"]],
 		nodesize = options[["minimumTerminalNodeSize"]],
 		maxnodes = options[["maximumTerminalNodeSize"]],
 		importance = TRUE, # options[["importance"]], # calc importance between rows. Always calc it, only show on user click.
-		proximity = FALSE, # options[["proximity"]], # calc proximity between rows. Always calc it, only show on user click.
+		proximity = options[["proximity"]], # calc proximity between rows. Always calc it, only show on user click.
 		keep.forest = TRUE, # should probably always be TRUE (otherwise partialPlot can't be called)
 		na.action = randomForest::na.roughfix
 	)
@@ -287,13 +292,16 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 	table <- list(title = "Summary")
 
 	intNms = c("MSE", "MDiA", "MDiNI", "NPred") # internal names
-	extNms = c("MSE", "% var explained", "No. of trees", "No. of predictors") # external names
+	extNms = c("MSE", "% var explained", "No. trees", "No. predictors") # external names
 
 	if (any(perform != "run", is.null(toFromState), is.null(variables))) { # no/ bad input
 
 		toTable <- matrix(".", nrow = 1, ncol = 4,
 						  dimnames = list(".", intNms))
-
+		footnotes_N <- .newFootnotes()						  
+		.addFootnote(footnotes_N,paste("The model has not been applied to any data yet."), symbol = "")
+		footnotes_N <- as.list(footnotes_N)	
+								  
 	} else { # input that can become an actual table
 
 		# matrix for conversion to markup table
@@ -308,6 +316,11 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 		toTable <- toTable[order(toTable[, 1], decreasing = TRUE), , drop = FALSE]
 		colnames(toTable) <- intNms
 		rownames(toTable) <- "RF model" 
+
+		data <- toFromState[["data"]] 
+		footnotes_N <- .newFootnotes()						  
+		.addFootnote(footnotes_N,paste('The model is tested on ', nrow(data[["xTest"]] ), "observations."), symbol = "")
+		footnotes_N <- as.list(footnotes_N)			
 	}
 
 	# fields = list(list(name="case", title="", type="string", combine=TRUE))
@@ -327,7 +340,7 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 	)
 
 	table[["data"]] <- .MLRFTables(toTable)
-
+	table[["footnotes"]] <- footnotes_N
 	return(table)
 
 }
@@ -368,6 +381,67 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 					  list(name = intNms[2], title = extNms[2], type="number", format="sf:4;dp:3"))
 	)
 
+	table[["data"]] <- .MLRFTables(toTable)
+
+	return(table)
+
+}
+
+# Proximity table
+.MLRFProxTb <- function(toFromState, variables, perform) {
+
+	table <- list(title = "Proximity matrix")
+
+	intNms = c("Obs 1", "Obs 2", "Obs 3", "Obs 4", "Obs 5", "Obs 6", "Obs 7", "Obs 8", "Obs 9", "Obs 10") # internal names
+	extNms = paste("Observation", 1:10) # external names
+
+	if (any(perform != "run", is.null(toFromState), is.null(variables))) { # no/ bad input
+
+		toTable <- matrix(".", nrow = 1, ncol = 10,
+						  dimnames = list(".", intNms))
+
+	} else { # input that can become an actual table
+
+		# matrix for conversion to markup table
+		#toTable <- randomForest::importance(toFromState$res)
+		#toTable <- toTable[order(toTable[, 1], decreasing = TRUE), , drop = FALSE]
+		#toTable <- toTable[1:2, 1:2]
+		
+		res <- toFromState[["res"]]		
+		toTable <- res[["proximity"]]		
+		toTable <- toTable[1:10, 1:10]		
+				
+		colnames(toTable) <- intNms 
+
+		nObs <- ncol(toTable)
+		rownames(toTable) <- paste("Observation", 1:nObs)
+
+	}
+
+	# fields = list(list(name="case", title="", type="string", combine=TRUE))
+	#
+	# for (i in seq_along(intNms)) {
+	#
+	# 	fields[[i]] <- list(name = intNms[i], name = extNms[i], type = type[i],
+	#
+	# }
+
+	table[["schema"]] <- list(
+		fields = list(list(name="case", title="", type="string", combine=TRUE),
+					  list(name = intNms[1], title = extNms[1], type="number", format="sf:4;dp:3"),
+					  list(name = intNms[2], title = extNms[2], type="number", format="sf:4;dp:3"),
+					  list(name = intNms[3], title = extNms[3], type="number", format="sf:4;dp:3"),
+					  list(name = intNms[4], title = extNms[4], type="number", format="sf:4;dp:3"),
+					  list(name = intNms[5], title = extNms[5], type="number", format="sf:4;dp:3"),
+					  list(name = intNms[6], title = extNms[6], type="number", format="sf:4;dp:3"),
+					  list(name = intNms[7], title = extNms[7], type="number", format="sf:4;dp:3"),
+					  list(name = intNms[8], title = extNms[8], type="number", format="sf:4;dp:3"),
+					  list(name = intNms[9], title = extNms[9], type="number", format="sf:4;dp:3"),
+					  list(name = intNms[10], title = extNms[10], type="number", format="sf:4;dp:3"))
+	)
+#	if(!"tree" %in% installed.packages()) {
+#		"Tree package has to be in JASP R folder"
+#	}
 	table[["data"]] <- .MLRFTables(toTable)
 
 	return(table)
@@ -473,7 +547,7 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 .MLRFplotTreesVsModelError <- function(toFromState, options, perform) {
 
 	rfPlot <- list(
-		title = "Number of trees vs model error",
+		title = "No. trees vs model error",
 		width = options[["plotWidth"]],
 		height = options[["plotHeight"]],
 		custom = list(width = "plotWidth", height = "plotHeight"),

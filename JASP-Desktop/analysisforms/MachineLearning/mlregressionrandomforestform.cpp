@@ -100,6 +100,7 @@ void MLRegressionRandomForestForm::defaultOptions()
 	ui->numberDataBootstrap->hide();
 
 	ui->percentageDataTraining->setSizePolicy(retain);
+
 	ui->percentageDataTraining->hide();
 
 	ui->modelMinimumTerminalNode->setSizePolicy(retain);
