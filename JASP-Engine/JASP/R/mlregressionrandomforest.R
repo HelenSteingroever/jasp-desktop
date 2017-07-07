@@ -95,10 +95,12 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 			list(name = "title",                     type = "title"),
 			list(name = "tableSummary",              type = "table"),				
 			list(name = "tableVariableImportance",   type = "table"),
+			list(name = "predictNew",                type = "table"),			
 			list(name = "proximity",                 type = "table"),					
 			list(name = "plotVariableImportance",    type = "image"),
 			list(name = "plotTreesVsModelError",     type = "image"),
-			list(name = "plotPredictivePerformance", type = "image")
+			list(name = "plotPredictivePerformance", type = "image"),
+			list(name = "postHocPlot",               type = "image")
 		)
 	)
 
@@ -148,7 +150,14 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 
 		if (options[["plotPredictivePerformance"]])
 			results[["plotPredictivePerformance"]] <- .MLRFplotPredPerf(toFromState = toFromState, options = options,
-																		perform = perform)		
+																		variables = variables, perform = perform)		
+
+		if (options[["postHocPlot"]])
+			results[["postHocPlot"]] <- .MLRFplotBestTree(toFromState = toFromState, options = options,
+																		perform = perform)	
+
+		if (options[["predictNew"]])
+			results[["predictNew"]] <- .MLRFPredTb(toFromState = toFromState, variables = variables, perform = perform) 
 
 		if (options[["proximity"]])
 			results[["proximity"]] <- .MLRFProxTb(toFromState = toFromState, variables = variables, perform = perform)																																			   																			   
@@ -206,13 +215,7 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 		options[["noOfPredictors"]] <- max(c(floor(length(variables) / 3), 1))
 	} else if (options[["noOfPredictors"]] == "manual") {
 		options[["noOfPredictors"]] <- as.integer(options[["numberOfPredictors"]])
-	}
-	
-	if (options[["dataBootstrapModel"]] == "auto") {
-		options[["dataBootstrapModel"]] <- ceiling(.632*n)
-	} else if (options[["dataBootstrapModel"]] == "manual") {
-		options[["dataBootstrapModel"]] <- ceiling(options[["numberDataBootstrap"]]/100*n)
-	}		
+	}	
 
 	if (options[["maximumTerminalNodeSize"]] == "auto") {
 		options[["maximumTerminalNodeSize"]] <- NULL
@@ -261,6 +264,14 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 		yTest <- NULL
 
 	}
+	
+	nTrain <- length(idxTrain)
+	
+	if (options[["dataBootstrapModel"]] == "auto") {
+		options[["dataBootstrapModel"]] <- ceiling(.632*nTrain)
+	} else if (options[["dataBootstrapModel"]] == "manual") {
+		options[["dataBootstrapModel"]] <- ceiling(options[["percentageDataBootstrap"]]/100*nTrain)
+	}		
 
 	# run RF
 	res <- randomForest::randomForest(
@@ -282,7 +293,8 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 
 	return(list(res = res,
 				data = list(xTrain = xTrain, yTrain = yTrain,
-							xTest = xTest, yTest = yTest)))
+							xTest = xTest, yTest = yTest),
+				target = target) )
 
 }
 
@@ -299,7 +311,7 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 		toTable <- matrix(".", nrow = 1, ncol = 4,
 						  dimnames = list(".", intNms))
 		footnotes_N <- .newFootnotes()						  
-		.addFootnote(footnotes_N,paste("The model has not been applied to any data yet."), symbol = "")
+		.addFootnote(footnotes_N,paste("The model has not yet been applied to any data."), symbol = "")
 		footnotes_N <- as.list(footnotes_N)	
 								  
 	} else { # input that can become an actual table
@@ -442,6 +454,48 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 #	if(!"tree" %in% installed.packages()) {
 #		"Tree package has to be in JASP R folder"
 #	}
+	table[["data"]] <- .MLRFTables(toTable)
+
+	return(table)
+
+}
+
+# Predictions table
+.MLRFPredTb <- function(toFromState, variables, perform) {
+
+	table <- list(title = "Variable Importance")
+
+	intNms = c("MDiA", "MDiNI") # internal names
+	extNms = c("Mean decrease in accuracy", "Mean decrease in node impurity") # external names
+
+	if (any(perform != "run", is.null(toFromState), is.null(variables))) { # no/ bad input
+
+		toTable <- matrix(".", nrow = 1, ncol = 2,
+						  dimnames = list(".", intNms))
+
+	} else { # input that can become an actual table
+
+		# matrix for conversion to markup table
+		toTable <- randomForest::importance(toFromState$res)
+		toTable <- toTable[order(toTable[, 1], decreasing = TRUE), , drop = FALSE]
+		colnames(toTable) <- intNms
+		rownames(toTable) <- variables[sort(randomForest::importance(toFromState$res)[,1], decr=T, index.return=T)$ix]  
+	}
+
+	# fields = list(list(name="case", title="", type="string", combine=TRUE))
+	#
+	# for (i in seq_along(intNms)) {
+	#
+	# 	fields[[i]] <- list(name = intNms[i], name = extNms[i], type = type[i],
+	#
+	# }
+
+	table[["schema"]] <- list(
+		fields = list(list(name="case", title="", type="string", combine=TRUE),
+					  list(name = intNms[1], title = extNms[1], type="number", format="sf:4;dp:3"),
+					  list(name = intNms[2], title = extNms[2], type="number", format="sf:4;dp:3"))
+	)
+
 	table[["data"]] <- .MLRFTables(toTable)
 
 	return(table)
@@ -688,4 +742,78 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 
 }
 
+# Post-hoc best tree plot
+.MLRFplotBestTree <- function(toFromState, options, variables, perform) {
+    
+	rfPlot <- list(
+		title = "Tree with the three most important variables",
+		width = options[["plotWidth"]],
+		height = options[["plotHeight"]],
+		custom = list(width = "plotWidth", height = "plotHeight"),
+		data = ""
+	)
 
+	if (perform == "run" && !is.null(toFromState)) { # are there results to plot?
+
+		res <- toFromState[["res"]]
+		
+		data <- toFromState[["data"]] 
+			
+		xTrain <- data[["xTrain"]] 
+		yTrain <- data[["yTrain"]] 
+		
+		target <- toFromState[["target"]] 	
+		
+		# Select the 3 most important variables
+		#VIvar <- variables[sort(randomForest::importance(res)[,1], decr=T, index.return=T)$ix][1:3]]
+		#dataTrain <- cbind(xTrain[, VIvar], yTrain)
+		#colnames(dataTrain[4]) <- target
+
+		if (res[["type"]] == "regression") {
+			
+			#bestTree <- tree(as.formula(paste(paste(target,"~",sep=""), paste(VIvar, collapse="+"), sep="")),
+			#                 data=data)
+			#bestTree <- tree::tree(dataTree[,14]~., data=dataTree)
+
+		} else if (res[["type"]] == "classification") {
+
+			#y <- res[["err.rate"]]
+			#yl <- "Error rate"
+
+		} else { # res[["type"]] == "unsupervised"
+
+			# there is no plot for unsupervised in the RF package
+			# the help page uses MDSplot, but this is something very different
+			# it makes a custom call to stats::cmdscales
+			# We could make something? I do not know what is regularly used
+			# randomForest::MDSplot(res, data[, "Species"])
+
+		}
+
+		#rfPlot[["title"]] <- paste0(rfPlot[["title"]], " (", yl, ")")
+
+		if (res$type != "unsupervised") {
+
+			content <- ""
+			if (!Sys.getenv("RSTUDIO") == "1")
+				image <- .beginSaveImage(width = options[["plotWidth"]], height = options[["plotHeight"]])
+
+			plot(1,1)
+			#plot(bestTree)
+			#text(bestTree, pretty=0)
+
+			if (!Sys.getenv("RSTUDIO") == "1")
+				content <- .endSaveImage(image)
+
+			rfPlot[["data"]] <- content
+
+		}
+
+		rfPlot[["status"]] <- "completed"
+		# staterfPlot = rfPlot
+
+	}
+
+	return(rfPlot)
+
+}

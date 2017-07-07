@@ -29,7 +29,8 @@ MLRegressionRandomForestForm::MLRegressionRandomForestForm(QWidget *parent) :
 
 	_targetListModel = new TableModelVariablesAssigned(this);
 	_targetListModel->setSource(&_availableVariablesModel);
-	_targetListModel->setVariableTypesSuggested(Column::ColumnTypeScale | Column::ColumnTypeNominal | Column::ColumnTypeOrdinal);
+    _targetListModel->setVariableTypesSuggested(Column::ColumnTypeScale);
+    _targetListModel->setVariableTypesAllowed(Column::ColumnTypeScale);
 	ui->target->setModel(_targetListModel);
 
 	_predictorsListModel = new TableModelVariablesAssigned(this);
@@ -39,8 +40,8 @@ MLRegressionRandomForestForm::MLRegressionRandomForestForm(QWidget *parent) :
 
 	_indicatorListModel = new TableModelVariablesAssigned(this);
 	_indicatorListModel->setSource(&_availableVariablesModel);
-	_indicatorListModel->setVariableTypesSuggested(Column::ColumnTypeScale);
-	_indicatorListModel->setVariableTypesAllowed(Column::ColumnTypeScale | Column::ColumnTypeNominal | Column::ColumnTypeOrdinal);
+    _indicatorListModel->setVariableTypesSuggested(Column::ColumnTypeNominal);
+    _indicatorListModel->setVariableTypesAllowed(Column::ColumnTypeNominal);
 	ui->indicator->setModel(_indicatorListModel);
 
 	ui->buttonAssignFixed->setSourceAndTarget(ui->listAvailableFields, ui->target);
@@ -49,8 +50,7 @@ MLRegressionRandomForestForm::MLRegressionRandomForestForm(QWidget *parent) :
 
 	_anovaModel = new TableModelAnovaModel(this);
 	_anovaModel->setPiecesCanBeAssigned(false);
-	ui->modelTerms->setModel(_anovaModel);
-	ui->modelTerms->hide();
+    ui->predict->hide();
 
 	connect(_targetListModel, SIGNAL(assignmentsChanging()), this, SLOT(factorsChanging()));
 	connect(_targetListModel, SIGNAL(assignmentsChanged()), this, SLOT(factorsChanged()));
@@ -96,8 +96,8 @@ void MLRegressionRandomForestForm::defaultOptions()
 	ui->numberOfPredictors->setSizePolicy(retain);
 	ui->numberOfPredictors->hide();
 
-	ui->numberDataBootstrap->setSizePolicy(retain);
-	ui->numberDataBootstrap->hide();
+	ui->percentageDataBootstrap->setSizePolicy(retain);
+	ui->percentageDataBootstrap->hide();
 
 	ui->percentageDataTraining->setSizePolicy(retain);
 
@@ -167,14 +167,14 @@ void MLRegressionRandomForestForm::on_auto_2_clicked(bool checked)
 void MLRegressionRandomForestForm::on_manual_3_clicked(bool checked)
 {
 	if (checked) {
-		ui->numberDataBootstrap->show();
+		ui->percentageDataBootstrap->show();
 	}
 }
 
 void MLRegressionRandomForestForm::on_auto_3_clicked(bool checked)
 {
 	if (checked) {
-		ui->numberDataBootstrap->hide();
+		ui->percentageDataBootstrap->hide();
 	}
 }
 
