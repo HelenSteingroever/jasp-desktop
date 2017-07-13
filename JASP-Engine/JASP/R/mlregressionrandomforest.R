@@ -16,7 +16,7 @@
 #
 
 MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
-									 callback = function(...) 0, ...) {
+									 callback = function(...) 0, state = NULL, ...) {
 									  # callback = function(...) list(status = "ok"), ...) {
 
 	print(str(options))
@@ -74,18 +74,24 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 
 	toFromState <- NULL
 
-	# if (!is.null(state)) {  # is there state?
-	#
-	# 	diff <- .diff(options, state$options)  # compare old and new options
-	#
-	# 	# if nothing important was changed retrieve state
-	# 	if (is.list(diff) && diff[['variables']] == FALSE) {
-	#
-	# 		toFromState <- state[["results"]]
-	#
-	# 	}
-	#
-	# }
+	# NOG IN TE VULLEN!
+	stateDepends <- c("noOfTrees", "numberOfTrees", 
+					  "noOfPredictors", "numberOfPredictors",
+					  "dataTrainingModel", "percentageDataTraining", 
+					  "minimumTerminalNodeSize", "modelMinimumTerminalNode",
+					  "maximumTerminalNodeSize", "modelMaximumTerminalNode",
+					  "dataBootstrapModel", "percentageDataBootstrap",
+					  "proximity",
+					  "seedBox", "seed",
+					  "samplingWithReplacement"
+					  )
+	stateKey <- list(
+		randomForest = stateDepends,
+		plotTreesVsModelError = stateDepends,
+		plotVariableImportance = stateDepends,
+		plotPredictivePerformance = stateDepends
+	)
+
 
 	## Initialize Results ## ----
 
@@ -93,10 +99,10 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 		title = "Random Forest Regression",
 		.meta = list(
 			list(name = "title",                     type = "title"),
-			list(name = "tableSummary",              type = "table"),				
+			list(name = "tableSummary",              type = "table"),
 			list(name = "tableVariableImportance",   type = "table"),
-			list(name = "predictNew",                type = "table"),			
-			list(name = "proximity",                 type = "table"),					
+			list(name = "predictNew",                type = "table"),
+			list(name = "proximity",                 type = "table"),
 			list(name = "plotVariableImportance",    type = "image"),
 			list(name = "plotTreesVsModelError",     type = "image"),
 			list(name = "plotPredictivePerformance", type = "image"),
@@ -107,7 +113,7 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 	## Do Analysis ## ----
 	errorList <- NULL
 
-	if (is.null(toFromState) && !is.null(variables) && !is.null(target)) { # implies old state was unusable
+	if (is.null(state[["randomForest"]]) && !is.null(variables) && !is.null(target)) { # implies old state was unusable
 
 		# check for errors
 		anyErrors <- .hasErrors(dataset = dataset, perform = perform, type = c("infinity", "variance"))
@@ -127,40 +133,50 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 
 	} else { # implies results are retrieved from state
 
+		toFromState <- state[["randomForest"]]
 		doUpdate <- TRUE
 
 	}
 
 	## Create Output ## ----
-
+	keep <- NULL
 	if (doUpdate) { # no errors were found
 
-		results[["tableSummary"]] <- .MLRFSummary(toFromState = toFromState, variables = variables, perform = perform)			
+		results[["tableSummary"]] <- .MLRFSummary(toFromState = toFromState, variables = variables, perform = perform)
 
 		if (options[["tableVariableImportance"]])
 			results[["tableVariableImportance"]] <- .MLRFVarImpTb(toFromState = toFromState, variables = variables, perform = perform)
 
-		if (options[["plotTreesVsModelError"]])
+		if (options[["plotTreesVsModelError"]]) {
 			results[["plotTreesVsModelError"]] <- .MLRFplotTreesVsModelError(toFromState = toFromState, options = options,
-																					 perform = perform)
+																					 perform = perform, oldPlot = state[["plotTreesVsModelError"]])
+			keep <- c(keep, results[["plotTreesVsModelError"]][["data"]])
+		}
 
-		if (options[["plotVariableImportance"]])
+		if (options[["plotVariableImportance"]]) {
 			results[["plotVariableImportance"]] <- .MLRFplotVariableImportance(toFromState = toFromState, options = options,
-																			   variables = variables, perform = perform)
+																			   variables = variables, perform = perform, oldPlot = state[["plotVariableImportance"]])
+			keep <- c(keep, results[["plotVariableImportance"]][["data"]])
+		}
 
-		if (options[["plotPredictivePerformance"]])
+		if (options[["plotPredictivePerformance"]]) {
 			results[["plotPredictivePerformance"]] <- .MLRFplotPredPerf(toFromState = toFromState, options = options,
-																		variables = variables, perform = perform)		
+																		variables = variables, perform = perform, oldPlot = state[["plotPredictivePerformance"]])
+			keep <- c(keep, results[["plotPredictivePerformance"]][["data"]])
+		}
 
-		if (options[["postHocPlot"]])
+		if (options[["postHocPlot"]]) {
 			results[["postHocPlot"]] <- .MLRFplotBestTree(toFromState = toFromState, options = options,
-														  variables = variables, perform = perform)	
+																		variables = variables, perform = perform, oldPlot = state[["postHocPlot"]])
+			keep <- c(keep, results[["postHocPlot"]][["data"]])
+		}
+
 
 		if (options[["predictNew"]])
-			results[["predictNew"]] <- .MLRFPredTb(toFromState = toFromState, variables = variables, perform = perform) 
+			results[["predictNew"]] <- .MLRFPredTb(toFromState = toFromState, variables = variables, perform = perform)
 
 		if (options[["proximity"]])
-			results[["proximity"]] <- .MLRFProxTb(toFromState = toFromState, variables = variables, perform = perform)																																			   																			   
+			results[["proximity"]] <- .MLRFProxTb(toFromState = toFromState, variables = variables, perform = perform)
 
 	} else { # add error messages
 
@@ -170,16 +186,26 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 
 	}
 	## Save State ##
+	state <- list(
+		options = options,
+		randomForest = toFromState,
+		plotTreesVsModelError = results[["plotVariableImportance"]],
+		plotVariableImportance = results[["plotVariableImportance"]],
+		plotPredictivePerformance = results[["plotPredictivePerformance"]],
+		postHocPlot = results[["postHocPlot"]]
+	)
+
+	attr(state, "key") <- stateKey
 
 
 	## Exit Analysis ##
 	if (perform == "init") {
 
-		return(list(results=results, status="inited"))#, state=state))
+		return(list(results=results, status="inited", state=state, keep=keep))
 
 	} else {
 
-		return(list(results=results, status="complete"))#, state=state))
+		return(list(results=results, status="complete", state=state, keep=keep))
 
 	}
 }
@@ -534,7 +560,10 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 }
 
 # Variable importance plot
-.MLRFplotVariableImportance <- function(toFromState, options, variables, perform) {
+.MLRFplotVariableImportance <- function(toFromState, options, variables, perform, oldPlot) {
+
+	if (!is.null(oldPlot) && !identical(oldPlot[["data"]], "")) # check if oldPlot can be used
+		return(oldPlot)
 
 	rfPlot <- list(
 		title = "Relative Importance of Variables",
@@ -598,7 +627,10 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 }
 
 # No. of trees vs model error plot
-.MLRFplotTreesVsModelError <- function(toFromState, options, perform) {
+.MLRFplotTreesVsModelError <- function(toFromState, options, perform, oldPlot) {
+
+	if (!is.null(oldPlot) && !identical(oldPlot[["data"]], ""))
+		return(oldPlot)
 
 	rfPlot <- list(
 		title = "No. trees vs model error",
@@ -668,7 +700,10 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 }
 
 # Predictive performance plot
-.MLRFplotPredPerf <- function(toFromState, options, perform) {
+.MLRFplotPredPerf <- function(toFromState, options, perform, oldPlot) {
+
+	if (!is.null(oldPlot) && !identical(oldPlot[["data"]], ""))
+		return(oldPlot)
 
 	rfPlot <- list(
 		title = "Predicted performance for test data",
@@ -743,8 +778,11 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 }
 
 # Post-hoc best tree plot
-.MLRFplotBestTree <- function(toFromState, options, variables, perform) {
-    
+.MLRFplotBestTree <- function(toFromState, options, variables, perform, oldPlot) {
+
+	if (!is.null(oldPlot) && !identical(oldPlot[["data"]], ""))
+		return(oldPlot)
+
 	rfPlot <- list(
 		title = "Tree with the three most important variables",
 		width = options[["plotWidth"]],
