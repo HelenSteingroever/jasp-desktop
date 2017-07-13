@@ -167,9 +167,10 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 
 		if (options[["postHocPlot"]]) {
 			results[["postHocPlot"]] <- .MLRFplotBestTree(toFromState = toFromState, options = options,
-																		perform = perform, oldPlot = state[["postHocPlot"]])
+																		variables = variables, perform = perform, oldPlot = state[["postHocPlot"]])
 			keep <- c(keep, results[["postHocPlot"]][["data"]])
 		}
+
 
 		if (options[["predictNew"]])
 			results[["predictNew"]] <- .MLRFPredTb(toFromState = toFromState, variables = variables, perform = perform)
@@ -488,7 +489,7 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 # Predictions table
 .MLRFPredTb <- function(toFromState, variables, perform) {
 
-	table <- list(title = "Variable Importance")
+	table <- list(title = "Predictions For New Data")
 
 	intNms = c("MDiA", "MDiNI") # internal names
 	extNms = c("Mean decrease in accuracy", "Mean decrease in node impurity") # external names
@@ -802,14 +803,19 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 		target <- toFromState[["target"]] 	
 		
 		# Select the 3 most important variables
-		#VIvar <- variables[sort(randomForest::importance(res)[,1], decr=T, index.return=T)$ix][1:3]]
-		#dataTrain <- cbind(xTrain[, VIvar], yTrain)
-		#colnames(dataTrain[4]) <- target
+		VIvar <- sort(randomForest::importance(res)[,1], decr=T, index.return=T)$ix[1:3]
+		dataTrain <- cbind(xTrain[, VIvar], yTrain)
+		VIvarNames <- variables[VIvar]
+		colnames(dataTrain) <- c(VIvarNames, target)
+		print(colnames(dataTrain))
 
 		if (res[["type"]] == "regression") {
 			
-			#bestTree <- tree(as.formula(paste(paste(target,"~",sep=""), paste(VIvar, collapse="+"), sep="")),
-			#                 data=data)
+			print(as.formula(paste(paste(target,"~",sep=""), paste(VIvarNames, collapse="+"), sep="")))
+			bestTree <- tree::tree(as.formula(paste(paste(target,"~",sep=""), paste(VIvarNames, collapse="+"), sep="")),
+			                 data=dataTrain)
+			print(bestTree)
+			                 
 			#bestTree <- tree::tree(dataTree[,14]~., data=dataTree)
 
 		} else if (res[["type"]] == "classification") {
@@ -834,11 +840,11 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 			content <- ""
 			if (!Sys.getenv("RSTUDIO") == "1")
 				image <- .beginSaveImage(width = options[["plotWidth"]], height = options[["plotHeight"]])
-
-			plot(1,1)
-			#plot(bestTree)
-			#text(bestTree, pretty=0)
-
+			
+			par(mar=c(5,5,1,1))
+			plot(bestTree)
+			text(bestTree, cex=.8)
+			
 			if (!Sys.getenv("RSTUDIO") == "1")
 				content <- .endSaveImage(image)
 
