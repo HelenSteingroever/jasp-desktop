@@ -6,7 +6,6 @@ JASPWidgets.table = Backbone.Model.extend({
 		variables: [],
 		data: [],
 		casesAcrossColumns: false,
-		overTitle: false,
 		formats: null,
 		footnotes: [],
 		citation: null,
@@ -135,33 +134,12 @@ JASPWidgets.tablePrimative = JASPWidgets.View.extend({
 
 	},
 
-	_swapRowsAndColumns: function (columnHeaders, columns, optOverTitle) {
+	_swapRowsAndColumns: function (columnHeaders, columns) {
 
 		var newRowCount = columns.length - 1
 		var newColumnCount = columns[0].length + 1
-		
-		if (optOverTitle) {
-			
-			// Transform first column into overtitle, second into title
-			var newColumnHeaders = Array(newColumnCount-1);
-			for (var colNo = 0; colNo < newColumnCount - 1; colNo++) {
-				newColumnHeaders[colNo] = { content: columns[1][colNo].content,
-																		header: true,
-																		overTitle: columns[0][colNo].content,
-																		type: "string" };
-			}
-			// remove the column that became title
-			columns.shift();
-			columnHeaders.shift();
-			newRowCount--;
-			
-		} else {
-			
-			var newColumnHeaders = Array(newColumnCount);
-			var newColumnHeaders = columns[0];
-			
-		}
-		
+
+		var newColumnHeaders = columns[0]
 		var newColumns = Array(newColumnCount)
 
 		var cornerCell = columnHeaders.shift()
@@ -686,7 +664,6 @@ JASPWidgets.tablePrimative = JASPWidgets.View.extend({
 		var optTitle = this.model.get("title");
 		var optSubtitle = this.model.get("subtitle");
 		var optCasesAcrossColumns = this.model.get("casesAcrossColumns");
-		var optOverTitle = this.model.get("overTitle")
 		var optFootnotes = this.model.get("footnotes");
 		var optCitation = this.model.get("citation");
 		var optStatus = this.model.get("status");
@@ -878,7 +855,7 @@ JASPWidgets.tablePrimative = JASPWidgets.View.extend({
 
 		if (optCasesAcrossColumns) {
 
-			var swapped = this._swapRowsAndColumns(columnHeaders, cells, optOverTitle)
+			var swapped = this._swapRowsAndColumns(columnHeaders, cells)
 			cells = swapped.columns
 			columnHeaders = swapped.columnHeaders;
 			rowCount = swapped.rowCount
@@ -922,39 +899,21 @@ JASPWidgets.tablePrimative = JASPWidgets.View.extend({
 		}
 
 		if (columnHeaders.length > 0) {
-			
-			var overTitles = false;
-			var overTitleSpace = false;
-			var overTitlesArray = [];
-			// Find the overTitles
+
+			var overTitles = false
+
 			for (var i = 0; i < columnHeaders.length; i++) {
+
 				if (columnHeaders[i].overTitle) {
-					overTitlesArray.push(columnHeaders[i].overTitle);
+
+					overTitles = true
+					break;
 				}
-			}
-			
-			if (overTitlesArray.length > 0) {
-				// If we have an overTitle, we should make it
-				overTitles = true;
-			}
-			
-			var uniqueOverTitles = $.unique(overTitlesArray)
-			if (uniqueOverTitles.length > 1) {
-				// If we have more than one unique overTitle, we should make small 
-				// breaks in the line under the overTitle to indicate end of old and 
-				// start of new overTitle. NB: with this option, the line is not copied
-				// to text processor.
-				overTitleSpace = true;
 			}
 
 			if (overTitles) {
-				
-				if (overTitleSpace) {
-					chunks.push('<tr class="over-title-space">')
-				} else {
-					chunks.push('<tr class="over-title">')
-				}
-				
+
+				chunks.push('<tr class="over-title">')
 
 				var span = 1;
 				var oldTitle = columnHeaders[0].overTitle
@@ -974,24 +933,15 @@ JASPWidgets.tablePrimative = JASPWidgets.View.extend({
 						span++
 					}
 					else {
-						if (overTitleSpace) {
-							chunks.push('<th colspan="' + (2 * span) + '"><div class="over-title-space">' + oldTitle + '</div></th>');
-						} else {
-							chunks.push('<th colspan="' + (2 * span) + '">' + oldTitle + '</th>');
-						}
+
+						chunks.push('<th colspan="' + (2 * span) + '">' + oldTitle + '</th>')
 						oldTitle = newTitle
 						span = 1
 					}
 				}
 
-				if (newTitle == oldTitle) {
-					if (overTitleSpace) {
-						chunks.push('<th colspan="' + (2 * span) + '"><div class="over-title-space">' + newTitle + '</div></th>')
-					} else {
-						chunks.push('<th colspan="' + (2 * span) + '">' + newTitle + '</th>')
-					}
-				}
-					
+				if (newTitle == oldTitle)
+					chunks.push('<th colspan="' + (2 * span) + '">' + newTitle + '</th>')
 
 				chunks.push('</tr>')
 			}
