@@ -96,7 +96,6 @@
             </item>
            </layout>
            <zorder>predictNew</zorder>
-           <zorder>expanderModel</zorder>
            <zorder>verticalSpacer_8</zorder>
           </widget>
          </item>
@@ -1153,7 +1152,7 @@
         </property>
         <property name="sizeHint" stdset="0">
          <size>
-          <width>0</width>
+          <width>40</width>
           <height>20</height>
          </size>
         </property>

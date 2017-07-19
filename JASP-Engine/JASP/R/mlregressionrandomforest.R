@@ -25,8 +25,15 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 	target <- options[["target"]]
 	if (target == "") # default for empty target
 		target <- NULL
+    
+    indicator <- NULL
+	if(length(options[["indicator"]]) > 0){
+	    indicator <- options[["indicator"]]
+	    print(paste("indicator is", indicator))
+	}		
 
-	variables.to.read <- c(target, variables)
+	variables.to.read <- c(target, variables, indicator)
+	variables.to.read <- variables.to.read[variables.to.read != ""]	
 
 	if (is.null(dataset)) { # how to handle factors?
 
@@ -75,7 +82,8 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 	toFromState <- NULL
 
 	# NOG IN TE VULLEN!
-	stateDepends <- c("noOfTrees", "numberOfTrees", 
+	stateDepends <- c("predictors", "target",
+	                  "noOfTrees", "numberOfTrees", 
 					  "noOfPredictors", "numberOfPredictors",
 					  "dataTrainingModel", "percentageDataTraining", 
 					  "minimumTerminalNodeSize", "modelMinimumTerminalNode",
@@ -88,7 +96,7 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 	stateKey <- list(
 		randomForest = stateDepends,
 		plotTreesVsModelError = stateDepends,
-		plotVariableImportance = stateDepends,
+		plotVariableImportance = c(stateDepends, "plotImportance"),
 		plotPredictivePerformance = stateDepends
 	)
 
@@ -122,8 +130,8 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 		.pprint(doUpdate)
 		if (doUpdate) { # do analysis
 
-			toFromState <- .MLRFAnalysis(dataset, purpose = "regression", perform = perform,
-										 options = options, variables = variables, target = target)
+			toFromState <- .MLRFAnalysis(dataset, purpose = "regression", options = options, variables = variables, 
+										 target = target, indicator = indicator, perform = perform)
 
 		} else { # show error message
 
@@ -189,7 +197,7 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 	state <- list(
 		options = options,
 		randomForest = toFromState,
-		plotTreesVsModelError = results[["plotVariableImportance"]],
+		plotTreesVsModelError = results[["plotTreesVsModelError"]],
 		plotVariableImportance = results[["plotVariableImportance"]],
 		plotPredictivePerformance = results[["plotPredictivePerformance"]],
 		postHocPlot = results[["postHocPlot"]]
@@ -217,7 +225,7 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 	#print(sprintf("%s = {%s}", y, capture.output(dput(x))))
 }
 
-.MLRFAnalysis <- function(dataset, purpose, options, variables, target, perform) {
+.MLRFAnalysis <- function(dataset, purpose, options, variables, target, indicator, perform) {
 
 	# early exit on unusable input -- needs modification for unsupervised RF
 	if (any(perform != "run", is.null(variables), is.null(target)))
@@ -225,11 +233,15 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 
 	preds <- .v(variables) # predictors
 	target <- .v(target) # targets
+	if(! is.null(indicator)){
+	    indicator <- .v(indicator)
+	    indicatorCol <- dataset[[indicator]]
+	    n <- sum(indicatorCol==0)  # no. training and test cases
+	    indexApply <- which(indicatorCol==1)
+	} else {
+		n <- nrow(dataset)  # no. training and test cases
+	}
 
-
-	# training and test data
-	n <- nrow(dataset)
-	
 	# defaults for everything set to "auto"
 	if (options[["noOfTrees"]] == "auto") {
 		options[["noOfTrees"]] <- 500
@@ -281,6 +293,10 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 		yTrain <- dataset[idxTrain, target]
 		xTest <- dataset[idxTest, preds, drop = FALSE]
 		yTest <- dataset[idxTest, target]
+		if(! is.null(indicator)){
+			idxApply <- which(indicatorCol == 1)
+			xApply <- dataset[idxApply, preds, drop = FALSE]
+		}		
 
 	} else { # unsupervised
 
@@ -319,8 +335,9 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 
 	return(list(res = res,
 				data = list(xTrain = xTrain, yTrain = yTrain,
-							xTest = xTest, yTest = yTest),
-				target = target) )
+							xTest = xTest, yTest = yTest, xApply = xApply),
+				target = target,
+				indexApply = indexApply) )
 
 }
 
@@ -491,8 +508,8 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 
 	table <- list(title = "Predictions For New Data")
 
-	intNms = c("MDiA", "MDiNI") # internal names
-	extNms = c("Mean decrease in accuracy", "Mean decrease in node impurity") # external names
+	intNms = c("ID", "Pred") # internal names
+	extNms = c("ID", "Prediction") # external names
 
 	if (any(perform != "run", is.null(toFromState), is.null(variables))) { # no/ bad input
 
@@ -501,11 +518,18 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 
 	} else { # input that can become an actual table
 
+		res <- toFromState[["res"]]
+		data <- toFromState[["data"]] 		
+        yApply <- predict(res, data[["xApply"]])
+        indexApply <- toFromState[["indexApply"]]
+        print(paste("Index apply is", indexApply))
+		#indicator <- toFromState[["indicator"]]
+		#print(indicator[1:10])
 		# matrix for conversion to markup table
-		toTable <- randomForest::importance(toFromState$res)
-		toTable <- toTable[order(toTable[, 1], decreasing = TRUE), , drop = FALSE]
+		toTable <- matrix(c(indexApply, yApply), ncol=2, byrow=F)
+		#toTable <- randomForest::importance(toFromState$res)
+		#toTable <- toTable[order(toTable[, 1], decreasing = TRUE), , drop = FALSE]
 		colnames(toTable) <- intNms
-		rownames(toTable) <- variables[sort(randomForest::importance(toFromState$res)[,1], decr=T, index.return=T)$ix]  
 	}
 
 	# fields = list(list(name="case", title="", type="string", combine=TRUE))
@@ -517,8 +541,8 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 	# }
 
 	table[["schema"]] <- list(
-		fields = list(list(name="case", title="", type="string", combine=TRUE),
-					  list(name = intNms[1], title = extNms[1], type="number", format="sf:4;dp:3"),
+		fields = list(#list(name="case", title="", type="string", combine=TRUE),
+					  list(name = intNms[1], title = extNms[1], type="number", format="sf:4;dp:0"),
 					  list(name = intNms[2], title = extNms[2], type="number", format="sf:4;dp:3"))
 	)
 
@@ -610,8 +634,8 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 			image <- .beginSaveImage(width = options[["plotWidth"]], height = options[["plotHeight"]])
 
 		#print(p)
-		barplot(toPlot[[2]], names.arg = toPlot[[1]], horiz = TRUE, xlab = xlabImpPlot, las = 1)
-	
+		barplot(toPlot[[2]], names.arg = toPlot[[1]], horiz = TRUE, xlab = xlabImpPlot, las = 1,
+		        cex.lab=1.4, cex.axis=1.2)
 
 		if (!Sys.getenv("RSTUDIO") == "1") {
 			content <- .endSaveImage(image)
@@ -680,7 +704,8 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 			if (!Sys.getenv("RSTUDIO") == "1")
 				image <- .beginSaveImage(width = options[["plotWidth"]], height = options[["plotHeight"]])
 
-			matplot(x, y, bty = "n", las = 1, xlab = "Trees", ylab = yl, type = "l", lwd = 2)
+			matplot(x, y, bty = "n", las = 1, xlab = "Trees", ylab = yl, type = "l", lwd = 2,
+			        cex.axis=1.2, cex.lab=1.4)
 			# print(g)
 
 			if (!Sys.getenv("RSTUDIO") == "1")
@@ -700,7 +725,7 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 }
 
 # Predictive performance plot
-.MLRFplotPredPerf <- function(toFromState, options, perform, oldPlot) {
+.MLRFplotPredPerf <- function(toFromState, options, variables, perform, oldPlot) {
 
 	if (!is.null(oldPlot) && !identical(oldPlot[["data"]], ""))
 		return(oldPlot)
@@ -807,14 +832,14 @@ MLRegressionRandomForest <- function(dataset = NULL, options, perform = "run",
 		dataTrain <- cbind(xTrain[, VIvar], yTrain)
 		VIvarNames <- variables[VIvar]
 		colnames(dataTrain) <- c(VIvarNames, target)
-		print(colnames(dataTrain))
+		#print(colnames(dataTrain))
 
 		if (res[["type"]] == "regression") {
 			
-			print(as.formula(paste(paste(target,"~",sep=""), paste(VIvarNames, collapse="+"), sep="")))
+			#print(as.formula(paste(paste(target,"~",sep=""), paste(VIvarNames, collapse="+"), sep="")))
 			bestTree <- tree::tree(as.formula(paste(paste(target,"~",sep=""), paste(VIvarNames, collapse="+"), sep="")),
 			                 data=dataTrain)
-			print(bestTree)
+			#print(bestTree)
 			                 
 			#bestTree <- tree::tree(dataTree[,14]~., data=dataTree)
 

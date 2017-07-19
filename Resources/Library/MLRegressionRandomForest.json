@@ -39,8 +39,7 @@
 		},		
 		{
 			"name": "tableVariableImportance",
-			"type": "Boolean",
-                         "default" : true
+			"type": "Boolean"
 		},
 		{
 			"name": "tableClassification",
