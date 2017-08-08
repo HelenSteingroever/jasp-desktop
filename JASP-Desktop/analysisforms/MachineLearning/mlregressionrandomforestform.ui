@@ -23,13 +23,16 @@
    <property name="verticalSpacing">
     <number>0</number>
    </property>
-   <item row="3" column="0">
-    <widget class="QWidget" name="widget_11" native="true">
-     <layout class="QGridLayout" name="gridLayout_6">
+   <item row="2" column="0">
+    <widget class="QWidget" name="widget_12" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Maximum" vsizetype="Minimum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_4">
       <property name="leftMargin">
-       <number>0</number>
-      </property>
-      <property name="topMargin">
        <number>0</number>
       </property>
       <property name="rightMargin">
@@ -38,83 +41,6 @@
       <property name="bottomMargin">
        <number>0</number>
       </property>
-      <property name="verticalSpacing">
-       <number>0</number>
-      </property>
-      <item row="0" column="0">
-       <widget class="QWidget" name="widget_10" native="true">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <layout class="QGridLayout" name="gridLayout_5">
-         <property name="leftMargin">
-          <number>0</number>
-         </property>
-         <property name="topMargin">
-          <number>13</number>
-         </property>
-         <property name="rightMargin">
-          <number>0</number>
-         </property>
-         <property name="bottomMargin">
-          <number>3</number>
-         </property>
-         <item row="2" column="0">
-          <widget class="BoundGroupBox" name="predict">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>50</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="title">
-            <string/>
-           </property>
-           <layout class="QGridLayout" name="gridLayout_22">
-            <item row="0" column="0">
-             <widget class="BoundCheckBox" name="predictNew">
-              <property name="text">
-               <string>Predictions</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="0">
-             <spacer name="verticalSpacer_8">
-              <property name="orientation">
-               <enum>Qt::Vertical</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>40</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-           </layout>
-           <zorder>predictNew</zorder>
-           <zorder>verticalSpacer_8</zorder>
-          </widget>
-         </item>
-         <item row="1" column="0">
-          <widget class="ExpanderButton" name="expanderModel">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="text">
-            <string>Predictions for New Data</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-      </item>
      </layout>
     </widget>
    </item>
@@ -455,16 +381,13 @@
      </layout>
     </widget>
    </item>
-   <item row="2" column="0">
-    <widget class="QWidget" name="widget_12" native="true">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Maximum" vsizetype="Minimum">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <layout class="QGridLayout" name="gridLayout_4">
+   <item row="3" column="0">
+    <widget class="QWidget" name="widget_11" native="true">
+     <layout class="QGridLayout" name="gridLayout_6">
       <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
        <number>0</number>
       </property>
       <property name="rightMargin">
@@ -473,6 +396,183 @@
       <property name="bottomMargin">
        <number>0</number>
       </property>
+      <property name="verticalSpacing">
+       <number>0</number>
+      </property>
+      <item row="0" column="0">
+       <widget class="QWidget" name="widget_10" native="true">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_5">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>13</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>3</number>
+         </property>
+         <item row="2" column="0">
+          <widget class="BoundGroupBox" name="predict">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>50</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="title">
+            <string/>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_22">
+            <item row="0" column="0">
+             <widget class="BoundCheckBox" name="predictNew">
+              <property name="text">
+               <string>Predictions</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <spacer name="verticalSpacer_8">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>40</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="1" column="0">
+             <widget class="BoundGroupBox" name="predictionsRange">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="title">
+               <string/>
+              </property>
+              <layout class="QGridLayout" name="gridLayout_26">
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>7</number>
+               </property>
+               <property name="spacing">
+                <number>-1</number>
+               </property>
+               <item row="0" column="2">
+                <widget class="QLabel" name="label_7">
+                 <property name="text">
+                  <string>to</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="BoundTextBox" name="predictionsFrom">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>60</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>60</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="0">
+                <widget class="QLabel" name="label_6">
+                 <property name="text">
+                  <string>Cases</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="3">
+                <widget class="BoundTextBox" name="predictionsTo">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>60</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>60</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <spacer name="horizontalSpacer_3">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+           <zorder>predictNew</zorder>
+           <zorder>verticalSpacer_8</zorder>
+           <zorder>predictionsRange</zorder>
+           <zorder>horizontalSpacer_3</zorder>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="ExpanderButton" name="expanderModel">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>Predictions for New Data</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
@@ -973,13 +1073,6 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="0">
-          <widget class="BoundCheckBox" name="tableClassification">
-           <property name="text">
-            <string>Confusion table (classification only)</string>
-           </property>
-          </widget>
-         </item>
         </layout>
        </widget>
       </item>
@@ -1071,19 +1164,6 @@
            </property>
           </widget>
          </item>
-         <item row="7" column="0" colspan="2">
-          <widget class="BoundCheckBox" name="postHocPlot">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="text">
-            <string>Post-hoc best tree</string>
-           </property>
-          </widget>
-         </item>
          <item row="5" column="0" colspan="2">
           <widget class="BoundCheckBox" name="plotTreesVsModelError">
            <property name="sizePolicy">
@@ -1097,7 +1177,7 @@
            </property>
           </widget>
          </item>
-         <item row="8" column="0">
+         <item row="9" column="0">
           <widget class="QLabel" name="label_17">
            <property name="minimumSize">
             <size>
@@ -1127,6 +1207,75 @@
            <property name="text">
             <string>Predictive performance for test data</string>
            </property>
+          </widget>
+         </item>
+         <item row="7" column="0" colspan="2">
+          <widget class="BoundCheckBox" name="postHocPlot">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>Post-hoc best tree</string>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="0">
+          <widget class="BoundGroupBox" name="postHocPredictors">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="title">
+            <string/>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_24">
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>7</number>
+            </property>
+            <property name="spacing">
+             <number>-1</number>
+            </property>
+            <item row="0" column="1">
+             <widget class="BoundTextBox" name="numberOfBestPredictors">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>60</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>60</width>
+                <height>16777215</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label">
+              <property name="text">
+               <string>No. best predictors</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </widget>
          </item>
         </layout>
@@ -1175,6 +1324,11 @@
    <header>widgets/availablefieldslistview.h</header>
   </customwidget>
   <customwidget>
+   <class>BoundListView</class>
+   <extends>QListView</extends>
+   <header>widgets/boundlistview.h</header>
+  </customwidget>
+  <customwidget>
    <class>GroupBox</class>
    <extends>QGroupBox</extends>
    <header>widgets/groupbox.h</header>
@@ -1192,19 +1346,14 @@
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>ExpanderButton</class>
-   <extends>QPushButton</extends>
-   <header>widgets/expanderbutton.h</header>
-  </customwidget>
-  <customwidget>
    <class>BoundCheckBox</class>
    <extends>QCheckBox</extends>
    <header>widgets/boundcheckbox.h</header>
   </customwidget>
   <customwidget>
-   <class>BoundListView</class>
-   <extends>QListView</extends>
-   <header>widgets/boundlistview.h</header>
+   <class>ExpanderButton</class>
+   <extends>QPushButton</extends>
+   <header>widgets/expanderbutton.h</header>
   </customwidget>
   <customwidget>
    <class>boundSingleItemView</class>
@@ -1227,6 +1376,38 @@
     <hint type="destinationlabel">
      <x>414</x>
      <y>691</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>postHocPlot</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>postHocPredictors</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>484</x>
+     <y>809</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>509</x>
+     <y>843</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>predictNew</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>predictionsRange</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>149</x>
+     <y>1079</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>146</x>
+     <y>1113</y>
     </hint>
    </hints>
   </connection>

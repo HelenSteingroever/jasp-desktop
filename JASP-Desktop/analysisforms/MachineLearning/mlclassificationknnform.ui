@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>694</width>
+    <width>800</width>
     <height>1572</height>
    </rect>
   </property>
@@ -1171,7 +1171,7 @@
       <item row="0" column="1">
        <widget class="BoundGroupBox" name="noOfTrees_2">
         <property name="title">
-         <string>Weigths</string>
+         <string>Weights</string>
         </property>
         <property name="flat">
          <bool>false</bool>
@@ -1333,7 +1333,7 @@
             <item row="0" column="0">
              <widget class="QLabel" name="label_7">
               <property name="text">
-               <string>From</string>
+               <string>Cases</string>
               </property>
              </widget>
             </item>

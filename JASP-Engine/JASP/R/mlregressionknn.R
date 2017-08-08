@@ -413,7 +413,7 @@ MLRegressionKNN <- function(dataset=NULL, options, state = NULL, perform="run", 
 
 .PlotKoptimizedRegression <- function(res,opt){
     
-    library(JASPgraphs) # remove later
+    #library(JASPgraphs) # remove later
     
     xName = "No. nearest neighbors"
     yName = "RMSE"
@@ -488,7 +488,7 @@ MLRegressionKNN <- function(dataset=NULL, options, state = NULL, perform="run", 
 		
 		data_descriptions[[1]] <- list(model = 'k-nn model', "nnc[nn]" = ".", "r[rmse]" = ".", "optim[type1]" = "")
 		footnotes_N <- .newFootnotes()
-		.addFootnote(footnotes_N,paste("The model has not been applied to any data yet"), symbol = "")
+		.addFootnote(footnotes_N,paste("The model has not yet been applied to any data."), symbol = "")
 		footnotes_N <- as.list(footnotes_N)
 		
 	}
@@ -1097,7 +1097,7 @@ MLRegressionKNN <- function(dataset=NULL, options, state = NULL, perform="run", 
 
 .knnRegressionTestAccuracyPlot <- function(res, target, options){
     
-    library(JASPgraphs)
+    #library(JASPgraphs)
     
     xName = "Observed"
     yName = "Predicted"

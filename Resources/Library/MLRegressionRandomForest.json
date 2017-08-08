@@ -38,6 +38,12 @@
 			"type": "Boolean"
 		},		
 		{
+			"name": "numberOfBestPredictors",
+			"type": "Integer",
+			"min": 1,
+			"default": 3   
+		},		
+		{
 			"name": "tableVariableImportance",
 			"type": "Boolean"
 		},
@@ -49,6 +55,20 @@
 			"name": "predictNew",
 			"type": "Boolean"
 		},		
+        {
+            "name": "predictionsFrom",
+            "type": "Integer",
+            "min": 1,
+            "max": 999999,
+            "default": 1
+        },
+        {
+            "name": "predictionsTo",
+            "type": "Integer",
+            "min": 1,
+            "max": 999999,
+            "default": 10
+        },
 		{
 			"name": "calculateProximityMatrix",
 			"type": "Boolean"
@@ -63,7 +83,7 @@
 			"name": "numberOfTrees",
 			"type": "Integer",
 			"min": 1,
-			"default": 1   
+			"default": 500   
 		},
 		{
 			"name": "noOfPredictors", 
